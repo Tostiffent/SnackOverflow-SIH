@@ -1,0 +1,44 @@
+AI Bot: "Please select your language: English (default), Hindi, Telugu, Kannada, Tamil, Malayalam."
+
+User: "English."
+
+AI Bot: "Ticket booking service, how may I help you?"
+
+User: "I want to book tickets."
+
+AI Bot: "Sure, I can help with that. Could you please tell me the name of the event you'd like to attend?"
+
+User: "The Ancient Civilizations Exhibition."
+
+AI Bot: "Great! How many tickets would you like to book?"
+
+User: "I'd like to book three tickets."
+
+AI Bot: "Thank you. Could you please provide your name?"
+
+User: "My name is Ravi Sharma."
+
+AI Bot: "Thanks, Mr. Sharma. May I have your phone number, please?"
+
+User: "It's 9876543210."
+
+AI Bot: "Got it. And your email address?"
+
+User: "ravi.sharma@email.com."
+
+AI Bot: "Perfect. Now, could you please let me know the type of tour you'd prefer? We offer Normal or Special tours, and they can be Guided or Unguided."
+
+User: "I'd like a Special Guided tour."
+
+AI Bot: "Noted. Do you require any special provisions, like a wheelchair or any other assistance?"
+
+User: "No, we don't need any special provisions."
+
+AI Bot: "At timings should we be expecting your arrival?"
+
+User: ""We will be arriving there at around 2pm.""
+
+AI Bot: "Thank you for the details. Here’s a summary of your booking: Three tickets for the Ancient Artifacts Exhibition on a Special Guided tour under the name Ravi Sharma. Is that correct?"
+User: "Yes, that's correct."
+
+AI Bot: "Great! I'll proceed with the booking. Please hold on for a moment."
