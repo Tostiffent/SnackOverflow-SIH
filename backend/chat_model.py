@@ -57,7 +57,7 @@ def print_stream(graph, inputs, config):
              message.pretty_print()
 
 def main():
-    print("Bot: Hello there! I'm your agent for today. Choose a language to continue: English or Hindi.")
+    print("Bot: Hello there! I'm your agent for today. Choose a language to continue: English or Hindi or Kannada.")
     while True:
         user_input = input("You: ")
         if user_input.lower() in ['exit', 'quit', 'bye']:
