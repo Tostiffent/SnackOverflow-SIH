@@ -32,10 +32,7 @@ async def check_events() -> str:
                 return "\n".join([f"{i+1}) {event['name']}" for i, event in enumerate(events)])
             else:
                 return "Error fetching events. Please try again later."
-@tool
-def check_events() -> float:
-     '''Return a list of currently available museum events. Use this when asking the user to book for tickets. Can be used to let user know what is available to book'''
-     return f"1) Stargazing, 2) Astronomy, 3) Painting, 4) History"
+
 
 @tool
 def check_tickets() -> float:
