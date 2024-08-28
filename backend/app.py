@@ -13,8 +13,7 @@ app.config["MONGO_URI"] = "mongodb://localhost:27017/"
 mongo = PyMongo(app)
 
 client = AsyncIOMotorClient("mongodb://localhost:27017/")
-db = client.your_database_name  # Replace with your actual database name
-
+db = client.national_museum_database  
 # Helper function to convert ObjectId to string
 def convert_objectid(document):
     document["_id"] = str(document["_id"])
