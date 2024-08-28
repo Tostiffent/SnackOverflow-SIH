@@ -1,12 +1,19 @@
 from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
 from bson import ObjectId
+from flask_cors import CORS
+import asyncio
+from motor.motor_asyncio import AsyncIOMotorClient
 
 app = Flask(__name__)
+CORS(app)
 
-# MongoDB connection string
+
 app.config["MONGO_URI"] = "mongodb://localhost:27017/"
 mongo = PyMongo(app)
+
+client = AsyncIOMotorClient("mongodb://localhost:27017/")
+db = client.your_database_name  # Replace with your actual database name
 
 # Helper function to convert ObjectId to string
 def convert_objectid(document):
@@ -14,9 +21,9 @@ def convert_objectid(document):
     return document
 
 @app.route('/events', methods=['GET'])
-def get_events():
+async def get_events():
     try:
-        events = mongo.db.events.find()
+        events = await db.events.find().to_list(length=None)
         events_list = [convert_objectid(event) for event in events]
         return jsonify(events_list), 200
     except Exception as e:
@@ -24,20 +31,20 @@ def get_events():
         return {"error": str(e)}, 500
 
 @app.route('/add_event', methods=['POST'])
-def add_event():
+async def add_event():
     try:
         data = request.json
-        event_id = mongo.db.events.insert_one(data).inserted_id
-        return jsonify({"message": "Event added successfully", "event_id": str(event_id)}), 201
+        result = await db.events.insert_one(data)
+        return jsonify({"message": "Event added successfully", "event_id": str(result.inserted_id)}), 201
     except Exception as e:
         print(f"Error adding event: {e}")
         return {"error": str(e)}, 500
 
 @app.route('/update_event/<event_id>', methods=['PUT'])
-def update_event(event_id):
+async def update_event(event_id):
     try:
         data = request.json
-        result = mongo.db.events.update_one({'_id': ObjectId(event_id)}, {"$set": data})
+        result = await db.events.update_one({'_id': ObjectId(event_id)}, {"$set": data})
         if result.matched_count == 0:
             return jsonify({"message": "Event not found"}), 404
         return jsonify({"message": "Event updated successfully"}), 200
@@ -46,9 +53,9 @@ def update_event(event_id):
         return {"error": str(e)}, 500
 
 @app.route('/delete_event/<event_id>', methods=['DELETE'])
-def delete_event(event_id):
+async def delete_event(event_id):
     try:
-        result = mongo.db.events.delete_one({'_id': ObjectId(event_id)})
+        result = await db.events.delete_one({'_id': ObjectId(event_id)})
         if result.deleted_count == 0:
             return jsonify({"message": "Event not found"}), 404
         return jsonify({"message": "Event deleted successfully"}), 200
