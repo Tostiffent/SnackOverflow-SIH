@@ -2,17 +2,22 @@ from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
 from bson import ObjectId
 from flask_cors import CORS
-import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
+from flask_socketio import SocketIO
+from flask_socketio import emit
+from chat_model import ChatModel
+import json
 
 app = Flask(__name__)
-CORS(app)
+#socketio and cors headers
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
+#threading auto handles all async tasks as a seperate thread
+socketio = SocketIO(app,cors_allowed_origins="*",async_mode="threading")
 
-
-app.config["MONGO_URI"] = "mongodb://localhost:27017/"
+app.config["MONGO_URI"] = "mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app"
 mongo = PyMongo(app)
 
-client = AsyncIOMotorClient("mongodb://localhost:27017/")
+client = AsyncIOMotorClient("mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app")
 db = client.national_museum_database  
 # Helper function to convert ObjectId to string
 def convert_objectid(document):
@@ -62,5 +67,17 @@ async def delete_event(event_id):
         print(f"Error deleting event: {e}")
         return {"error": str(e)}, 500
 
+#event named send_message is trigger, current input format {"msg": string, "id", string}
+@socketio.on('send_message')
+def handle_send_message(msg):
+    print("Generating response for: ", msg)
+    #manually converting string to json
+    msg = json.loads(msg)
+    res = ChatModel(msg["id"], msg["msg"])
+    #response is the event name triggered on frontend
+    emit("response", res)
+    
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    #socketio takes over the handling of the flask application
+    socketio.run(app)

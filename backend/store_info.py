@@ -1,9 +1,9 @@
 from pymongo import MongoClient
 from datetime import datetime, timedelta
-import client_info
+import backend.TranscriptExtraction as TranscriptExtraction
 
 def connect_to_mongodb():
-    client = MongoClient('mongodb://localhost:27017/')
+    client = MongoClient('mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app')
     db = client['national_museum_database']
     return db
 
@@ -214,6 +214,6 @@ def store_museum_data(client_name, phone_number, email_id, event_name, num_ticke
 
 # Example usage
 if __name__ == "__main__":
-    client_name, phone_number, email_id, event_name, num_tickets, tour_type, special_provisions, event_time = client_info.ready_to_store('stt.txt')
+    client_name, phone_number, email_id, event_name, num_tickets, tour_type, special_provisions, event_time = TranscriptExtraction.ready_to_store('stt.txt')
 
     store_museum_data(client_name, phone_number, email_id, event_name, num_tickets, tour_type, special_provisions, event_time)

@@ -1,0 +1,12 @@
+flask
+flask_cors
+flask_pymongo
+asyncio
+motor
+requests
+pymongo
+langchain_core
+langchain_google_genai
+langgraph
+argparse
+flask-socketio
