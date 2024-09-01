@@ -1,121 +1,55 @@
 #
-# Copyright (c) 2024, Rohith
 # Copyright (c) 2024, Daily
 #
 # SPDX-License-Identifier: BSD 2-Clause License
 #
 
-import asyncio
-from typing import AsyncGenerator, List
 import aiohttp
+import asyncio
 import os
-import json
 import sys
-import requests
 
+from pipecat.frames.frames import LLMMessagesFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
-from pipecat.pipeline.task import PipelineParams, PipelineTask
-from pipecat.processors.aggregators.llm_response import LLMAssistantResponseAggregator, LLMUserResponseAggregator
-from pipecat.processors.frame_processor import FrameProcessor, FrameDirection
-from pipecat.frames.frames import (
-    LLMMessagesFrame, Frame, StartFrame, CancelFrame, EndFrame
+from pipecat.pipeline.task import PipelineTask
+from pipecat.processors.aggregators.llm_response import (
+    LLMAssistantResponseAggregator,
+    LLMUserResponseAggregator
 )
+from pipecat.services.cartesia import CartesiaTTSService
+from pipecat.services.deepgram import DeepgramSTTService
+from pipecat.services.openai import OpenAILLMService
+from pipecat.transports.network.websocket_server import WebsocketServerParams, WebsocketServerTransport
+from pipecat.vad.silero import SileroVADAnalyzer
 from pipecat.services.elevenlabs import ElevenLabsTTSService
 from pipecat.services.google import GoogleLLMService
-from pipecat.transports.services.daily import DailyParams,  DailyTransport
-from pipecat.vad.silero import SileroVADAnalyzer
-from pipecat.services.gladia import GladiaSTTService
-from pipecat.services.deepgram import DeepgramSTTService, DeepgramTTSService
 
-from runner import configure
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.prebuilt import create_react_agent
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.tools import tool
+from pipecat.processors.frameworks.langgraph import LanggraphProcessor
 
 from loguru import logger
+from pymongo import MongoClient
 
 from dotenv import load_dotenv
 load_dotenv(override=True)
-
-import google.generativeai as genai
-genai.configure(api_key=os.getenv("GOOGLE_AI_API_KEY"))
-model = genai.GenerativeModel('gemini-1.5-flash')
 
 logger.remove(0)
 logger.add(sys.stderr, level="DEBUG")
 
 
-class ConversationProcessor(FrameProcessor):
-    def __init__(self, messages: List[dict] = [], caller_location = (5.6, 3.22), **kwargs):
-        super().__init__(**kwargs)
-        self.conversation_log = messages
-        self.conversation_ended = False
-        self.caller_location = caller_location
-    
-    async def handle_conversation_end(self):
-        if self.conversation_ended:
-            return
-        
-        self.conversation_ended = True
-        await self.push_frame(EndFrame(), FrameDirection.UPSTREAM)
-
-        logger.info("Conversation Ended")
-
-        # remove system prompt
-        self.conversation_log = self.conversation_log[1:]
-
-        # create text transcript from message dict
-        transcript = ""
-        for message in self.conversation_log:
-            transcript += f'{message["role"]}: {message["content"]}\n' 
-        print(transcript) 
-        prompt = 'You are an AI information extrapolation agent for the purpose of ticket booking in a museum. You are to extract the following data from the given transcript: 1) name (the name of the show the user wants to attend) 2) number: (The number of tickets required) 3) Name (the name of the person). Respond in the following json format: { "type": string, "number": number, "name": string }. DO NOT OUTPUT ANYTHING OTHER THAN THE JSON. If you are unable to determine any of the above please state "Unknown". Following is the transcript of the call:'
-        prompt += "\n" + transcript
-        response = model.generate_content(prompt)
-        json_data = json.loads(response.candidates[0].content.parts[0].text)
-        print(json_data)
-
-        api_server_url = os.getenv("API_SERVER_URL")
-        res = requests.post(f"{api_server_url}/api/incidents/register", json={
-            "name" : json_data["name"],
-            "lat": self.caller_location[0],
-            "lng": self.caller_location[1],
-            "criticality": json_data["criticality"],
-            "transcript": transcript,
-            "status": "open",
-            "type": json_data["type"],
-            "impact": json_data["impact"]
-        })
-        print(res.json())
-
-    async def process_frame(self, frame: Frame, direction: FrameDirection) -> AsyncGenerator[Frame, None]:
-        await super().process_frame(frame, direction)
-
-        if isinstance(frame, LLMMessagesFrame):
-            last_message = frame.messages[-1]
-
-            if last_message["role"] == "assistant":
-                if "<END>" in last_message["content"]:
-                    await self.handle_conversation_end()
-
-            print(last_message)
-        elif isinstance(frame, EndFrame):
-                await self.handle_conversation_end()
-
-        await self.push_frame(frame, direction)
-
 async def main():
     async with aiohttp.ClientSession() as session:
-        (room_url, token, caller_location) = await configure(session)
-
-        transport = DailyTransport(
-            room_url,
-            token,
-            "Chatbot",
-            DailyParams(
+        transport = WebsocketServerTransport(
+            params=WebsocketServerParams(
                 audio_out_enabled=True,
+                add_wav_header=True,
                 vad_enabled=True,
                 vad_analyzer=SileroVADAnalyzer(),
-                transcription_enabled=True,     
-                vad_audio_passthrough=True,  
+                vad_audio_passthrough=True
             )
         )
 
@@ -124,52 +58,86 @@ async def main():
         tts = ElevenLabsTTSService(
             aiohttp_session=session,
             api_key=os.getenv("ELEVENLABS_API_KEY"),
-            voice_id="EXAVITQu4vr4xnSDxMaL", # English
+            voice_id="z9fAnlkpzviPz146aGWa", # English
         )
+        memory = MemorySaver()
+        client = MongoClient('mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app')
+        db = client['national_museum_database']
+        @tool
+        def check_events() -> str:
+          '''Return a list of currently available museum events. Use this when asking the user to book for tickets. Can be used to let user know what is available to book'''
+          events = list(db.events.find({}, {'name': 1, '_id': 0}))
+          return "\n".join([f"{i+1}) {event['name']}" for i, event in enumerate(events)])
 
-        llm = GoogleLLMService(
-            api_key=os.getenv("GOOGLE_AI_API_KEY"),
-            model="gemini-1.5-flash-latest"
-        )
+        @tool
+        def check_tickets(show: str) -> str:
+          '''Return currently available tickets for the show, use this tool when user is selecting how many tickets he/she wants. Can also be used to give more information about the event by telling that these many tickets are available'''
+          event = db.events.find_one({'name': show})
+          if event:
+            capacity = event.get('capacity', 0)
+            booked_tickets = db.guests.count_documents({'event_name': show})
+            available_tickets = max(0, capacity - booked_tickets)
+            price = event.get('prices', {}).get('normal_unguided', 'N/A')
+            return f"{available_tickets} tickets available for {show}. Price for each ticket is {price} rupees."
+          else:
+            return f"No information available for {show}."
+
+        tools = [check_tickets, check_events]
+        llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+    temperature=0,
+    max_tokens=None,
+    timeout=None,
+    max_retries=2,
+)
 
         messages = [
             {
                 "role": "system",
-                "content": "You are an AI ticket booking agent at a national museum and you speak in HINDI. ASK ALL QUESTIONS TO THE USER IN HINDI ONE BY ONE NOT ALL AT ONCE AND SLOWLY. You are in a call with a person who wants to book a few tickets to available shows and the user speaks in HINDI so the words will be in hindi. You are to obtain the following information from the user. ASK EACH INFORMATION ONE AT A TIME AND NOT ALL AT ONCE AND WAIT FOR THEIR RESPONSE BEFORE PROCEEDING AND THE RESPONSE WILL BE IN HINDI: Name of the event, number of tickets required, name of the caller. Do so by prompting for each piece of information and waiting for a response before moving on to the next one. Do not ask them all at once. Your output will be converted to audio so don't include special characters in your answers. Keep your responses brief. Start with 'Ticket booking service, how may I help you (IN HINDI)?'. If you feel you have all the information you need, end the conversation, although not abruptly. Do not end with a question. Include '<END>' at the end of your last response.",
+                "content": '''You are an AI agent AND YOU SPEAK ONLY IN THE LANGUAGE DECIDED BY THE USER BUT THE USER CAN SPEAK IN ENGLISH BUT REPLY IN THE LANGUAGE DECIDED BY THE USER ONLY. 
+                           You are tasked to help a user decide and buy a museum ticket. You can speak in multiple languages mostly Indian.
+                            Your end goal is to gather the following information from the user 1) Name of the user, 2) Show the user wants to watch (give user the list of available shows to book), 3) Number of tickets required.
+                            You shall ask these questions to the user in a natural way ONE BY ONE. If the user has any query related to museum stop and answer that first and then ask question again.
+                            AT THE END GIVE A SUMMARY FOR THE ORDER IN WITH THE FOLLOWING VALUES,NAME:, SHOW: NUMBER OF TICKETS:, TOTAL AMOUNT TO BE PAID. REMEMBER YOUR BILL MESSAGE MUST HAVE THE NAME, SHOW, NUMBER OF TICKETS AND TOTAL AMOUNT TO BE PAID. IF THOSE ARE NOTPRESENT REWRITE YOUR MESSAGE.
+                           Start with saying Hello i'm ur agent for today, how may I help you?
+                                   YOUR TEXT WILL BE CONVERTED TO VOICE SO PLEASE DON'T USE ANY KIND OF SPECIAL CHARACTERS LIKE `#` or `*`. " AS IT WILL GIVE UNATURAL SOUNDS. Only say 1 thing at time and not all at once. Also please write everything in 1 sentence instead of multiple''',
             },
         ]
 
-        user_response = LLMUserResponseAggregator(messages)
-        assistant_response = LLMAssistantResponseAggregator(messages)
+        graph = create_react_agent(llm, tools ,checkpointer=MemorySaver(), state_modifier='''You are an AI agent AND YOU SPEAK ONLY IN THE LANGUAGE DECIDED BY THE USER BUT THE USER CAN SPEAK IN ENGLISH BUT REPLY IN THE LANGUAGE DECIDED BY THE USER ONLY. 
+                           You are tasked to help a user decide and buy a museum ticket. You can speak in multiple languages mostly Indian.
+                            Your end goal is to gather the following information from the user 1) Name of the user, 2) Show the user wants to watch (give user the list of available shows to book), 3) Number of tickets required.
+                            You shall ask these questions to the user in a natural way ONE BY ONE. If the user has any query related to museum stop and answer that first and then ask question again.
+                            AT THE END GIVE A SUMMARY FOR THE ORDER IN WITH THE FOLLOWING VALUES,NAME:, SHOW: NUMBER OF TICKETS:, TOTAL AMOUNT TO BE PAID. REMEMBER YOUR BILL MESSAGE MUST HAVE THE NAME, SHOW, NUMBER OF TICKETS AND TOTAL AMOUNT TO BE PAID. IF THOSE ARE NOTPRESENT REWRITE YOUR MESSAGE.
+                           Start with saying Hello i'm ur agent for today, how may I help you?
+                                   YOUR TEXT WILL BE CONVERTED TO VOICE SO PLEASE DON'T USE ANY KIND OF SPECIAL CHARACTERS LIKE `#` or `*`. " AS IT WILL GIVE UNATURAL SOUNDS. Only say 1 thing at time and not all at once. Also please write everything in 1 sentence instead of multiple''')
 
-        convo_processor = ConversationProcessor(messages, caller_location)
+        tma_in = LLMUserResponseAggregator(messages)
+        tma_out = LLMAssistantResponseAggregator(messages)
+        proc = LanggraphProcessor(graph)
 
         pipeline = Pipeline([
-            transport.input(),
-            stt,
-            user_response,
-            llm,
-            tts,
-            transport.output(),
-            assistant_response,
-            convo_processor,
+            transport.input(),   # Websocket input from client
+            stt,                 # Speech-To-Text
+            tma_in,              # User responses
+            proc,                 # LLM
+            tts,                 # Text-To-Speech
+            transport.output(),  # Websocket output to client
+            tma_out              # LLM responses
         ])
 
-        task = PipelineTask(pipeline, PipelineParams(allow_interruptions=True))
+        task = PipelineTask(pipeline)
 
-        @transport.event_handler("on_first_participant_joined")
-        async def on_first_participant_joined(transport, participant):
-            transport.capture_participant_transcription(participant["id"])
+        @transport.event_handler("on_client_connected")
+        async def on_client_connected(transport, client):
+            # Kick off the conversation.
+            messages.append(
+                {"role": "system", "content": "Please introduce yourself to the user."})
             await task.queue_frames([LLMMessagesFrame(messages)])
-
-        @transport.event_handler("on_participant_left")
-        async def on_participant_left(transport, participant, *args):
-            await task.queue_frames([EndFrame()])
 
         runner = PipelineRunner()
 
         await runner.run(task)
-
 
 if __name__ == "__main__":
     asyncio.run(main())

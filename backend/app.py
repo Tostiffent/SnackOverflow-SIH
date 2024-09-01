@@ -67,14 +67,14 @@ async def delete_event(event_id):
         print(f"Error deleting event: {e}")
         return {"error": str(e)}, 500
 
-#event named send_message is trigger, current input format {"msg": string, "id", string}
+#event named send_message is trigger, current input format as a dict {"msg": string, "id", string}
 @socketio.on('send_message')
 def handle_send_message(msg):
     print("Generating response for: ", msg)
     #manually converting string to json
-    msg = json.loads(msg)
     res = ChatModel(msg["id"], msg["msg"])
     #response is the event name triggered on frontend
+    print("sending", res)
     emit("response", res)
     
 
