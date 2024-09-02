@@ -64,7 +64,7 @@ def extract_booking_info(content):
     {content}
 
     Return the information in JSON format with the following keys:
-    - name: The name of the person booking (if mentioned)
+    - name: The name of the person booking (if mentioned), if only the name is mentioned then return the name as the value of the name key
     - show: The name of the show being booked (if mentioned)
     - number_of_tickets: The number of tickets being booked (if mentioned)
     - total_amount: The total amount to be paid (if mentioned)
