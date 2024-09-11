@@ -12,7 +12,8 @@ app = Flask(__name__)
 #socketio and cors headers
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 #threading auto handles all async tasks as a seperate thread
-socketio = SocketIO(app,cors_allowed_origins="*",async_mode="threading")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+
 
 app.config["MONGO_URI"] = "mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app"
 mongo = PyMongo(app)
@@ -67,17 +68,16 @@ async def delete_event(event_id):
         print(f"Error deleting event: {e}")
         return {"error": str(e)}, 500
 
-#event named send_message is trigger, current input format {"msg": string, "id", string}
+#event named send_message is trigger, current input format as a dict {"msg": string, "id", string}
 @socketio.on('send_message')
 def handle_send_message(msg):
     print("Generating response for: ", msg)
     #manually converting string to json
-    msg = json.loads(msg)
     res = ChatModel(msg["id"], msg["msg"])
     #response is the event name triggered on frontend
-    emit("response", res)
-    
+    print("sending", res)
+    socketio.emit("response", res)
 
 if __name__ == '__main__':
     #socketio takes over the handling of the flask application
-    socketio.run(app)
+    socketio.run(app, debug=True, host='127.0.0.1', port=5000)
