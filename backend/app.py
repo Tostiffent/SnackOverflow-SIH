@@ -67,6 +67,14 @@ async def delete_event(event_id):
     except Exception as e:
         print(f"Error deleting event: {e}")
         return {"error": str(e)}, 500
+    
+@app.route('/voice/response', methods=['POST'])
+async def handle_voice_response():
+    data = request.json
+    print(data)
+    socketio.emit("voice_response", data)
+    return "sent to front"
+    
 
 #event named send_message is trigger, current input format as a dict {"msg": string, "id", string}
 @socketio.on('send_message')
