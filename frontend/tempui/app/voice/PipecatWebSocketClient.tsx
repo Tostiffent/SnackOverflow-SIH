@@ -14,7 +14,7 @@ declare global {
 
 const SAMPLE_RATE = 16000;
 const NUM_CHANNELS = 1;
-const PLAY_TIME_RESET_THRESHOLD_MS = 1000;
+const PLAY_TIME_RESET_THRESHOLD_MS = 1.0;
 const isLoading = false;
 
 const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
@@ -50,7 +50,8 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
 
     if (typeof window !== "undefined") {
       const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/protobufjs@7.X.X/dist/protobuf.min.js";
+      script.src =
+        "https://cdn.jsdelivr.net/npm/protobufjs@7.X.X/dist/protobuf.min.js";
       script.onload = loadProtobuf;
       document.body.appendChild(script);
 
@@ -63,7 +64,9 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
 
   const initWebSocket = () => {
     console.log("Initializing WebSocket...");
-    wsRef.current = new WebSocket("ws://127.0.0.1:5000/");
+    wsRef.current = new WebSocket(
+      "https://fuzzy-space-guide-r5646xqvwpqcpqpx-8765.app.github.dev/"
+    );
     wsRef.current.addEventListener("open", () => {
       console.log("WebSocket connection established.");
       setIsWebSocketReady(true);
@@ -178,8 +181,7 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
       scriptProcessorRef.current.connect(audioContextRef.current.destination);
 
       scriptProcessorRef.current.onaudioprocess = (event) => {
-        console.log("Audio processing event triggered");
-        if (!wsRef.current || !isWebSocketReady) return;
+        //if (!wsRef.current || !isWebSocketReady) return;
 
         const audioData = event.inputBuffer.getChannelData(0);
 
@@ -203,7 +205,6 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
         });
         const encodedFrame = new Uint8Array(Frame.encode(frame).finish());
         wsRef.current.send(encodedFrame);
-        console.log("Audio frame sent, size:", encodedFrame.length, "bytes");
       };
 
       console.log("Audio processing set up successfully");
@@ -244,14 +245,14 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
   };
 
   return (
-    <div 
-      className={`${styles.container} ${isDarkMode ? styles.darkMode : ''}`}
+    <div
+      className={`${styles.container} ${isDarkMode ? styles.darkMode : ""}`}
       style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
       }}
     >
       <div className={styles.header}>
@@ -269,7 +270,9 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
       </div>
       <div className={styles.footer}>
         <button
-          className={`${styles.button} ${isPlaying ? styles.stopButton : styles.startButton}`}
+          className={`${styles.button} ${
+            isPlaying ? styles.stopButton : styles.startButton
+          }`}
           onClick={isPlaying ? () => stopAudio(true) : startAudio}
           disabled={isLoading}
         >
