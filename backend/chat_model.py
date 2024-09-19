@@ -50,13 +50,8 @@ def check_tickets(show: str) -> dict:
             "available_tickets": available_tickets,
             "price": price
         }
-    else:
-        return {
-            "type": "tickets",
-            "show": show,
-            "available_tickets": 0,
-            "price": "N/A"
-        }
+    if not event:
+        return {"type": "tickets", "show": show, "available_tickets": 0, "price": "N/A"}
 
 tools = [check_tickets, check_events]
 
@@ -64,34 +59,35 @@ def extract_booking_info(content):
     prompt = f"""
     Extract the booking information from the following conversation:
     {content}
-    
+
     Return the information in JSON format with the following keys:
-    - name: The name of the person booking (if mentioned)
-    - show: The name of the show being booked (if mentioned)
-    - number_of_tickets: The number of tickets being booked (if mentioned)
-    - total_amount: The total amount to be paid (if mentioned)
     
-    If any information is not available, leave the value as an empty string or 0 for numbers.
-    If no relevant information is found, return an empty JSON object. 
-    """
-    
-    response = extractionLLM.invoke(prompt)  
+    name: The name of the person booking (if mentioned)
+show: The name of the show being booked (if mentioned)
+number_of_tickets: The number of tickets being booked (if mentioned)
+total_amount: The total amount to be paid (if mentioned)
+
+If any information is not available, leave the value as an empty string or 0 for numbers.
+If no relevant information is found, return an empty JSON object. 
+"""
+
+    response = extractionLLM.invoke(prompt)
+
+    if not response or not response.content:
+        print("Warning: LLM response is empty")
+        return {}
+
     try:
         extracted_info = json.loads(response.content)
-    except json.JSONDecodeError:
-        try:
-            json_start = response.content.index('{')
-            json_end = response.content.rindex('}') + 1
-            json_str = response.content[json_start:json_end]
-            extracted_info = json.loads(json_str)
-        except (ValueError, json.JSONDecodeError):
-            print("Warning: Could not extract valid JSON from the response.")
-            return {}
-    
+    except json.JSONDecodeError as e:
+        print(f"JSON Decode Error: {str(e)}")
+        return {}
+
+#Ensure extracted_info has all necessary keys
     for key in ["name", "show", "number_of_tickets", "total_amount"]:
         if key not in extracted_info:
             extracted_info[key] = "" if key != "number_of_tickets" else 0
-    
+
     return extracted_info
 
 
