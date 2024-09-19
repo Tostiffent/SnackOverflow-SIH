@@ -17,6 +17,7 @@ import Typewriter from "typewriter-effect";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PipecatWebSocketClient from "../voice/PipecatWebSocketClient";
+import axios from "axios";
 
 function ChatbotPage() {
   const [messages, setMessages] = useState([
@@ -41,6 +42,8 @@ function ChatbotPage() {
   });
   const bookingInfoRef = useRef(bookingInfo);
   const [isConnecting, setIsConnecting] = useState(true);
+  const [responseId, setResponseId] = useState("");
+  const [responseState, setResponseState] = useState([]);
 
   useEffect(() => {
     bookingInfoRef.current = bookingInfo;
@@ -182,6 +185,99 @@ function ChatbotPage() {
         connectWebSocket();
       }
     }
+  };
+
+  const loadScript = (src: any) => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+
+      script.src = src;
+
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+
+      document.body.appendChild(script);
+    });
+  };
+
+  const createRazorpayOrder = (amount: any) => {
+    handleRazorpayScreen(amount * 100);
+    // let data = JSON.stringify({
+    //   amount: amount * 100,
+    //   currency: "INR",
+    // });
+
+    // let config = {
+    //   method: "post",
+    //   maxBodyLength: Infinity,
+    //   url: "http://localhost:5000/orders",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   data: data,
+    // };
+
+    // axios
+    //   .request(config)
+    //   .then((response: any) => {
+    //     console.log(JSON.stringify(response.data));
+    //     handleRazorpayScreen(response.data.amount);
+    //   })
+    //   .catch((error: any) => {
+    //     console.log("error at", error);
+    //   });
+  };
+
+  const handleRazorpayScreen = async (amount: any) => {
+    const res = await loadScript("https:/checkout.razorpay.com/v1/checkout.js");
+
+    if (!res) {
+      alert("Some error at razorpay screen loading");
+      return;
+    }
+
+    const options = {
+      key: "rzp_test_GcZZFDPP0jHtC4",
+      amount: amount,
+      currency: "INR",
+      name: "Swapnil Rao",
+      description: "payment to Swapnil Rao",
+      image: "https://papayacoders.com/demo.png",
+      handler: function (response: any) {
+        setResponseId(response.razorpay_payment_id);
+      },
+      prefill: {
+        name: "Swapnil Rao",
+        email: "swapnil.rao1@gmail.com",
+      },
+      theme: {
+        color: "#9d03fc",
+      },
+    };
+
+    //@ts-ignore
+    const paymentObject = new window.Razorpay(options);
+    paymentObject.open();
+  };
+
+  const paymentFetch = (e) => {
+    e.preventDefault();
+
+    const paymentId = e.target.paymentId.value;
+
+    axios
+      .get(`http://localhost:5000/payment/${paymentId}`)
+      .then((response: any) => {
+        console.log(response.data);
+        setResponseState(response.data);
+      })
+      .catch((error: any) => {
+        console.log("error occures", error);
+      });
   };
 
   const sendMsg = (ms: string) => {
@@ -499,7 +595,10 @@ function ChatbotPage() {
                 </div>
               </div>
             </div>
-            <button className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+            <button
+              onClick={() => createRazorpayOrder(bookingInfo.total_amount)}
+              className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+            >
               Proceed to Payment
             </button>
           </div>
