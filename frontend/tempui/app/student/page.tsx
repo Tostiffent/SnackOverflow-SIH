@@ -1,5 +1,5 @@
-"use client";
-import React, { useEffect, useRef, useState } from "react";
+'use client'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,32 +13,30 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Send, Mic, BookOpen, GraduationCap, Building, IndianRupee, Users, Briefcase, Mic2 } from 'lucide-react'
 import { toast, ToastContainer } from "react-toastify";
-import {
-  Send,
-  Mic,
-  BookOpen,
-  GraduationCap,
-  Building,
-  IndianRupee,
-  Users,
-  Briefcase,
-} from "lucide-react";
 import { Socket, io } from "socket.io-client";
 
-export default function Component() {
-  const [messages, setMessages] = useState([
-    {
-      role: "bot",
-      content:
-        "Hello! How can I assist you with information about technical education in Rajasthan?",
-    },
-  ]);
-  const [input, setInput] = useState("");
+
+// Add these type declarations at the top of your file
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
+type Message = {
+  role: 'user' | 'bot';
+  content: string;
+}
+
+export default function VoiceActivatedChatbot() {
+
   const [ws, setWs] = useState<Socket | null>(null);
   const [isConnecting, setIsConnecting] = useState(true);
 
-  const handleSend = () => {
+  const handleSendMessage = () => {
     if (input.trim()) {
       if (ws && ws.connected) {
         sendMsg(input);
@@ -129,6 +127,84 @@ export default function Component() {
       socket.disconnect();
     };
   }, []);
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'bot', content: 'Hello! How can I assist you with information about technical education in Rajasthan?' },
+  ])
+  const [input, setInput] = useState('')
+  const [isListening, setIsListening] = useState(false)
+  const [transcript, setTranscript] = useState('')
+
+  const [recognition, setRecognition] = useState<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognitionInstance = new SpeechRecognition();
+        recognitionInstance.continuous = true;
+        recognitionInstance.interimResults = true;
+        recognitionInstance.lang = 'en-US';
+
+        recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
+          const current = event.resultIndex;
+          const transcript = event.results[current][0].transcript;
+          setTranscript(transcript);
+        };
+
+        recognitionInstance.onend = () => {
+          setIsListening(false);
+        };
+
+        setRecognition(recognitionInstance);
+      }
+    }
+
+    return () => {
+      if (recognition) {
+        recognition.stop();
+      }
+    };
+  }, []);
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  }, [isListening]);
+
+  const startListening = useCallback(() => {
+    setIsListening(true);
+    setTranscript('');
+    if (recognition) {
+      recognition.start();
+    }
+  }, [recognition]);
+
+  const stopListening = useCallback(() => {
+    setIsListening(false);
+    if (recognition) {
+      recognition.stop();
+    }
+    if (transcript) {
+      handleSend(transcript);
+    }
+  }, [recognition, transcript]);
+
+
+  const handleSend = useCallback((message: string) => {
+    if (message.trim()) {
+      setMessages(prevMessages => [...prevMessages, { role: 'user', content: message }])
+      // Here you would typically send the input to your AI backend and get a response
+      // For this example, we'll just echo the user's message
+      setTimeout(() => {
+        setMessages(prev => [...prev, { role: 'bot', content: `You said: ${message}. sexy nudes` }])
+      }, 1000)
+      setInput('')
+      setTranscript('')
+    }
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -210,24 +286,37 @@ export default function Component() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    handleSend();
+                    handleSendMessage();
                   }}
                   className="flex w-full items-center space-x-2"
                 >
                   <Input
                     id="message"
-                    placeholder="Type your message..."
-                    value={input}
+                    placeholder={isListening ? 'Listening...' : 'Type your message...'}
+                    value={isListening ? transcript : input}
                     onChange={(e) => setInput(e.target.value)}
                     className="flex-1"
+                    disabled={isListening}
                   />
-                  <Button type="submit" size="icon">
+                  <Button type="submit" size="icon" disabled={isListening}>
                     <Send className="h-4 w-4" />
                     <span className="sr-only">Send</span>
                   </Button>
-                  <Button type="button" size="icon" variant="outline">
-                    <Mic className="h-4 w-4" />
-                    <span className="sr-only">Voice input</span>
+                  <Button
+                    type="button"
+                    size="icon"
+                    
+                    variant={isListening ? "destructive" : "outline"}
+                    onClick={toggleListening}
+                  >
+                    {isListening ? (
+                      <Mic2 className="h-4 w-4 animate-pulse text-black " />
+                    ) : (
+                      <Mic className="h-4 w-4" />
+                    )}
+                    <span className="sr-only">
+                      {isListening ? 'Stop listening' : 'Start listening'}
+                    </span>
                   </Button>
                 </form>
               </CardFooter>
