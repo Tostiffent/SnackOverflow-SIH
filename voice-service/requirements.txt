@@ -3,3 +3,7 @@ fastapi[all]
 uvicorn
 pipecat-ai[daily,openai,google,silero,deepgram]
 google-generativeai
+langgraph
+langchain_google_genai
+langchain
+pymongo
