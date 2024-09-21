@@ -1,33 +1,43 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
-import React from "react";
-import { useState } from "react";
-import { useGoogleLogin } from "@react-oauth/google";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { signinGoogle, signin } from "../../redux/actions/auth";
+import { signup, signupGoogle } from "../../redux/actions/auth";
 import { useRouter } from "next/navigation";
+import { useGoogleLogin } from "@react-oauth/google";
+
+const InitState = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+};
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
   const router = useRouter();
   const dispatch = useDispatch();
+  const [sForm, setsForm] = useState(InitState);
+
+  const handleChange = (e: any) =>
+    setsForm({
+      ...sForm,
+      [e.target.name]: e.target.value,
+    });
 
   function handleGoogleLoginSuccess(tokenResponse: any) {
     const accessToken = tokenResponse.access_token;
 
-    dispatch(signinGoogle(accessToken, router));
+    dispatch(signupGoogle(accessToken, router));
+  }
+
+  function handleOnSubmit(e: any) {
+    console.log("submitting");
+    e.preventDefault();
+    console.log("dispatching");
+    dispatch(signup(sForm, router));
   }
   const login = useGoogleLogin({ onSuccess: handleGoogleLoginSuccess });
-
-  function handleSubmit(e: any) {
-    e.preventDefault();
-    if (email !== "" && password !== "") {
-      dispatch(signin({ email, password }, router));
-    }
-  }
-
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-900">
       <div className="w-full max-w-6xl flex flex-col lg:flex-row items-stretch bg-gray-900 rounded-lg shadow-lg overflow-hidden">
@@ -35,18 +45,38 @@ const LoginPage: React.FC = () => {
           <h1 className="text-3xl lg:text-4xl font-semibold">
             Welcome to our service
           </h1>
-          <p className="mt-4 text-gray-400">Login to Continue</p>
+          <p className="mt-4 text-gray-400">Sign Up to Continue</p>
         </div>
         <div className="flex-1 bg-white p-8 lg:p-12">
           <h2 className="text-2xl lg:text-3xl font-semibold text-gray-900">
-            Sign in
+            Sign Up
           </h2>
           <form className="mt-6 space-y-4 lg:space-y-6">
             <div>
+              <label className="block text-gray-700">First Name</label>
+              <input
+                name="firstName"
+                onChange={handleChange}
+                type="text"
+                placeholder="Enter your email address"
+                className="mt-1 w-full px-3 py-2 text-black border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700">Last Name</label>
+              <input
+                name="lastName"
+                onChange={handleChange}
+                type="text"
+                placeholder="Enter your email address"
+                className="mt-1 w-full px-3 py-2 text-black border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div>
+            <div>
               <label className="block text-gray-700">Email address</label>
               <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                name="email"
+                onChange={handleChange}
                 type="email"
                 placeholder="Enter your email address"
                 className="mt-1 w-full px-3 py-2 text-black border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
@@ -55,8 +85,18 @@ const LoginPage: React.FC = () => {
             <div>
               <label className="block text-gray-700">Password</label>
               <input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                name="password"
+                onChange={handleChange}
+                type="password"
+                placeholder=""
+                className="mt-1 w-full text-black px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700">Confirm Password</label>
+              <input
+                name="confirmpassword"
+                onChange={handleChange}
                 type="password"
                 placeholder=""
                 className="mt-1 w-full text-black px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
@@ -83,11 +123,11 @@ const LoginPage: React.FC = () => {
             </div>
             <div>
               <button
-                onClick={handleSubmit}
+                onClick={handleOnSubmit}
                 type="submit"
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               >
-                Sign In
+                Sign up
               </button>
             </div>
             <div className="text-center text-gray-600 mt-4">

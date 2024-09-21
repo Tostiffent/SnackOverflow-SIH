@@ -91,6 +91,7 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
 
   const enqueueAudioFromProto = (arrayBuffer: ArrayBuffer) => {
     console.log("Enqueuing audio from proto...");
+    console.log("Current Frame value:", Frame);
     if (!Frame) {
       console.error("Frame is not set");
       return;
@@ -107,6 +108,7 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
     lastMessageTimeRef.current = audioContextRef.current?.currentTime!;
 
     const audioVector = Array.from(parsedFrame.audio.audio);
+    //@ts-ignore
     const audioArray = new Uint8Array(audioVector);
 
     if (audioContextRef.current) {
@@ -147,6 +149,7 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
     }
 
     audioContextRef.current = new (window.AudioContext ||
+      //@ts-ignore
       window.webkitAudioContext)({
       latencyHint: "interactive",
       sampleRate: SAMPLE_RATE,
@@ -204,6 +207,7 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
           },
         });
         const encodedFrame = new Uint8Array(Frame.encode(frame).finish());
+        //@ts-ignore
         wsRef.current.send(encodedFrame);
       };
 
@@ -256,7 +260,7 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
       }}
     >
       <div className={styles.header}>
-        <h2 className={styles.title}>Ticket Talash Voice Assistant</h2>
+        <h2 className={styles.title}>EduMitra Voice Assistant</h2>
         <button onClick={() => setCall(false)} className={styles.closeButton}>
           Close
         </button>

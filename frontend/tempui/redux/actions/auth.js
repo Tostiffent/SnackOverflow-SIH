@@ -10,14 +10,14 @@ export const loadUser = () => async (dispath) => {
 };
 
 export const signin = (data2, router) => async (dispath) => {
-  try {
-    const { data } = await api.signIn(data2);
-
-    dispath({ type: AUTH, data });
-    router.push("/");
-  } catch (err) {
-    console.log(err);
-  }
+  console.log(data2);
+  const { data } = await api.signIn({
+    email: data2.email,
+    password: data2.password,
+  });
+  console.log(data);
+  dispath({ type: AUTH, data });
+  router.push("/");
 };
 
 export const signinGoogle = (accessToken, router) => async (dispatch) => {
@@ -35,6 +35,7 @@ export const signinGoogle = (accessToken, router) => async (dispatch) => {
 export const signup = (formData, router) => async (dispatch) => {
   try {
     // signup user
+    console.log(formData);
     const { data } = await api.signUp(formData);
 
     dispatch({ type: AUTH, data });

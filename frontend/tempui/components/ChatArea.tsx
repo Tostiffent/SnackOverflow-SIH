@@ -121,7 +121,7 @@ export default function ChatArea({
               />
             </div>
             <div>
-              <h2 className="text-2xl font-bold">Ticket Talash</h2>
+              <h2 className="text-2xl font-bold">EduMitra</h2>
               <p className="text-sm text-gray-400">🟢 Always active</p>
             </div>
           </div>

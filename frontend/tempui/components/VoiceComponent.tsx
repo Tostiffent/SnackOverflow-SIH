@@ -14,7 +14,9 @@ interface PipecatWebSocketClientProps {
 }
 
 // Rename the const declaration to avoid conflict
-const PipecatWebSocketClientComponent: React.FC<PipecatWebSocketClientProps> = ({ setCall, isDarkMode }) => {
+const PipecatWebSocketClientComponent: React.FC<
+  PipecatWebSocketClientProps
+> = ({ setCall, isDarkMode }) => {
   // Component implementation
 };
 
@@ -50,7 +52,8 @@ export default function PipecatWebSocketClient({ setCall }: { setCall: any }) {
 
     if (typeof window !== "undefined") {
       const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/protobufjs@7.X.X/dist/protobuf.min.js";
+      script.src =
+        "https://cdn.jsdelivr.net/npm/protobufjs@7.X.X/dist/protobuf.min.js";
       script.onload = loadProtobuf;
       document.body.appendChild(script);
     }
@@ -58,9 +61,7 @@ export default function PipecatWebSocketClient({ setCall }: { setCall: any }) {
 
   const initWebSocket = () => {
     console.log("Initializing WebSocket...");
-    wsRef.current = new WebSocket(
-      "http://127.0.0.1:5000/"
-    );
+    wsRef.current = new WebSocket("http://127.0.0.1:5000/");
     wsRef.current.addEventListener("open", () => {
       console.log("WebSocket connection established.");
       setIsWebSocketReady(true);
@@ -268,7 +269,7 @@ export default function PipecatWebSocketClient({ setCall }: { setCall: any }) {
             />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">Ticket Talash</h2>
+            <h2 className="text-2xl font-bold">EduMitra</h2>
           </div>
         </div>
         <img
