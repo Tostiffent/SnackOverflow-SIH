@@ -42,7 +42,7 @@ memory = MemorySaver()
 
 @tool
 def check_colleges() -> dict:
-    '''Return a list of currently listed colleges in the database from Rajasthan. Use when user wants to know about the colleges available. WHENEVER USER ASK WHAT ALL COLLEGES YOU KNOW ABOUT GIVE THIS LIST... FETCH DATA FROM DATA BASE'''
+    '''Return a list of currently listed colleges in the database from Rajasthan. Use when user wants to know about the colleges available. WHENEVER USER ASK WHAT ALL COLLEGES YOU KNOW ABOUT GIVE THIS LIST... FETCH DATA FROM DATA BASE. PROVIDE THE LIST OF AVAILABLE COLLEGES IN THE DATABASE'''
     colleges = list(db.colleges.find())
     college_info = [{"name": college["name"], "id": str(college["_id"])} for college in colleges]
     print(college_info)
@@ -71,16 +71,17 @@ def check_fees(name: str, type: str) -> str:
     
 
 @tool 
-async def check_cutoff(name: str) -> str:
+def check_cutoff(name: str) -> dict:
     '''Return the cutoffs in a particular selected college'''
-    college = db.colleges.find_one({'name': college[name]})
-    if not college or 'csv_file_path' not in college:
-        raise ValueError("CSV file path not found for the selected college.")
+    college = db.colleges.find_one({'name': name})
     
-    loader = CSVLoader(file_path=college['csv_file_path'])
-    data= await loader.load()
-    return {
-        "cutoff":data
+    if college:
+        return {
+            "cutoff": college["cutoff"]
+        }
+    else:
+        return {
+            "error": f"Sorry, we don't have any information about {name}"
         }
 tools = [check_courses, check_colleges, check_fees, check_cutoff]
 
@@ -90,18 +91,22 @@ def extract_college_info(content):
     {content}
     
     Return the information in JSON format with the following keys:
-    - college_name: The name of the college being inquired about (if mentioned)
-    - inquiry_type: The type of inquiry (e.g., admission, fees, courses, etc.)
+    - name: The name of the college being inquired about (if mentioned)
+    - course: The course being inquired about (if mentioned)
+    - fees: The fee structure being inquired about (if mentioned)
+    - cutoff: The cutoff information being inquired about (if mentioned)
+    - scholarships: Any scholarships being inquired about (if mentioned). BUT DONT RETURN ANYTHING RELATED TO SCHOLARSHIP
     - specific_details: Any specific details or questions asked
-    - user_name: The name of the person making the inquiry (if mentioned)
     
     If any information is not available, leave the value as an empty string or 0 for numbers.
     If no relevant information is found, return an empty JSON object. 
     """
     
-    response = extractionLLM.invoke(prompt)  
+    response = extractionLLM.invoke(prompt)
+    print(response)  
     try:
         extracted_info = json.loads(response.content)
+        print(extracted_info)
     except json.JSONDecodeError:
         try:
             json_start = response.content.index('{')
@@ -112,9 +117,7 @@ def extract_college_info(content):
             print("Warning: Could not extract valid JSON from the response.")
             return {}
     
-    for key in ["college_name", "inquiry_type", "specific_details", "user_name"]:
-        if key not in extracted_info:
-            extracted_info[key] = ""
+    
     
     return extracted_info
 
@@ -136,7 +139,6 @@ def print_stream(graph, inputs, config):
              print(message)
          else:
              message.pretty_print()
-     print(msg)
      return {"msg": msg, "toolCall":toolCall}
 
 def ChatModel(id, msg):
@@ -151,6 +153,9 @@ def ChatModel(id, msg):
         return {"res": {"msg": "I'm sorry, but I encountered an error. Could you please try again?", "toolCall": {}}, "info": {}}
 graph = create_react_agent(llm, tools, checkpointer=MemorySaver(), state_modifier='''You are an AI-powered Student Assistance Chatbot for the Department of Technical Education, Government of Rajasthan. Your primary role is to provide accurate and helpful information about engineering and polytechnic institutes in Rajasthan.
 ACCESSS THE COLLEGES INFO THROUGH THE @TOOLS AND USE THE COLLEGE NAME TO FETCH THE DATA FROM THE DATABASE. FETCH DATA FROM DATABASE ONLY ONLY ONLY.ACCESSS THE COLLEGES INFO THROUGH THE @TOOLS AND USE THE COLLEGE NAME TO FETCH THE DATA FROM THE DATABASE. FETCH DATA FROM DATABASE ONLY ONLY ONLY
+IF THE USER ASKS ABOUT ALL THE ENGINEERING COLLEGES AVAILABLE FETCH THE DATABASE AND FROM THE TOOL CALL OF DATABSE, SEE THE CATEGORY OF THE COLLEGES AVAILABLE IN DATABSE, AND PRINT THE ENGINEERING COLLEGES. 
+IF THE USER ASKS ABOUT ALL THE POLYTECHNIC COLLEGES AVAILABLE FETCH THE DATABASE AND FROM THE TOOL CALL OF DATABSE, SEE THE CATEGORY OF THE COLLEGES AVAILABLE IN DATABSE, AND PRINT THE POLYTECHNIC COLLEGES. 
+IF THE USERASKS ABOUT SOME MEDICAL OR ARTS OR ANY OTHER MISCLENEOUS COLLEGES, JUST SAY YOU DONT HAVE ANY INFORMATION.
 Key Points:
 1. Language: You can understand queries in English or Hindi, but always respond in the language chosen by the user at the start of the conversation.
 2. Scope: You only provide information about engineering and polytechnic colleges under the Department of Technical Education, Government of Rajasthan.
@@ -178,17 +183,17 @@ Start the conversation by introducing yourself and asking how you can help with 
 
 NOTE- IF YOU DONT HAVE ANY COLLEGES IN DATABASE, DONT ANSWER ANYTHING, JUST SAY YOU DONT HAVE ANY INFORMATION. ''')
 #uncomment and run to test
-def main():
-    print("Bot: Hello there! I'm your agent for today. Choose a language to continue: English or Hindi or Kannada.")
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() in ['exit', 'quit', 'bye']:
-            print("Bot: Thank you! Goodbye!")
-            sys.exit()
+# def main():
+#     print("Bot: Hello there! I'm your agent for today. Choose a language to continue: English or Hindi or Kannada.")
+#     while True:
+#         user_input = input("You: ")
+#         if user_input.lower() in ['exit', 'quit', 'bye']:
+#             print("Bot: Thank you! Goodbye!")
+#             sys.exit()
         
-        inputs = {"messages": [("user", user_input)]}
-        print_stream(graph, inputs, config={"configurable": {"thread_id": "123"}})  
-        sleep(2)  
+#         inputs = {"messages": [("user", user_input)]}
+#         print_stream(graph, inputs, config={"configurable": {"thread_id": "123"}})  
+#         sleep(2)  
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

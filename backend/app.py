@@ -12,14 +12,14 @@ app = Flask(__name__)
 #socketio and cors headers
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 #threading auto handles all async tasks as a seperate thread
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 
 app.config["MONGO_URI"] = "mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app"
 mongo = PyMongo(app)
 
 client = AsyncIOMotorClient("mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app")
-db = client.national_museum_database  
+db = client.college_database  
 # Helper function to convert ObjectId to string
 def convert_objectid(document):
     document["_id"] = str(document["_id"])

@@ -54,12 +54,8 @@ function ChatbotPage() {
   }, [collegeInfo]);
 
   const connectWebSocket = () => {
-    const socket = io(
-      "https://super-engine-694vvjp9qjw73rq6-5000.app.github.dev/",
-      {
-        transports: ["websocket"],
-        upgrade: false,
-      }
+    const socket = io("http://127.0.0.1:5000/", { transports: ["websocket"] }
+    
     );
 
     socket.on("connect", () => {
@@ -68,63 +64,22 @@ function ChatbotPage() {
       setIsConnecting(false);
       toast.success("Connected to server");
     });
-
     socket.on("response", (data) => {
       console.log("Received response:", data);
-      let newInfo = data.info;
-      let oldInfo = collegeInfoRef.current;
-      // newInfo.name =
-      //   newInfo.name !== "" && oldInfo.name !== newInfo.name
-      //     ? newInfo.name
-      //     : oldInfo.name;
-      // newInfo.show =
-      //   newInfo.show !== "" && oldInfo.show !== newInfo.show
-      //     ? newInfo.show
-      //     : oldInfo.show;
-      // newInfo.number_of_tickets =
-      //   newInfo.number_of_tickets !== 0 &&
-      //   oldInfo.number_of_tickets !== newInfo.number_of_tickets
-      //     ? newInfo.number_of_tickets
-      //     : oldInfo.number_of_tickets;
-      // newInfo.total_amount =
-      //   newInfo.total_amount !== 0 &&
-      //   oldInfo.total_amount !== newInfo.total_amount
-      //     ? newInfo.total_amount
-      //     : oldInfo.total_amount;
-      setCollegeInfo(newInfo);
+      let newInfo = { ...collegeInfoRef.current, ...data.info };
+      setCollegeInfo(newInfo);  // Update the state
+    
       setMessages((oldArray) => [
         ...oldArray,
         { sender: "bot", content: data.res.msg, toolCall: data.res.toolCall },
       ]);
-
-      // Update maxTickets if available in the response
-      if (data.res.toolCall && data.res.toolCall.available_tickets) {
-        setMaxTickets(data.res.toolCall.available_tickets);
-      }
     });
+    
 
     socket.on("voice_response", (data) => {
       console.log("Received response:", data);
       let newInfo = data.info;
       let oldInfo = collegeInfoRef.current;
-      // newInfo.name =
-      //   newInfo.name !== "" && oldInfo.name !== newInfo.name
-      //     ? newInfo.name
-      //     : oldInfo.name;
-      // newInfo.show =
-      //   newInfo.show !== "" && oldInfo.show !== newInfo.show
-      //     ? newInfo.show
-      //     : oldInfo.show;
-      // newInfo.number_of_tickets =
-      //   newInfo.number_of_tickets !== 0 &&
-      //   oldInfo.number_of_tickets !== newInfo.number_of_tickets
-      //     ? newInfo.number_of_tickets
-      //     : oldInfo.number_of_tickets;
-      // newInfo.total_amount =
-      //   newInfo.total_amount !== 0 &&
-      //   oldInfo.total_amount !== newInfo.total_amount
-      //     ? newInfo.total_amount
-      //     : oldInfo.total_amount;
       setCollegeInfo(newInfo);
       setMessages((oldArray) => [
         ...oldArray,
