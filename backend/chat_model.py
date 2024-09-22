@@ -42,11 +42,7 @@ memory = MemorySaver()
 
 @tool
 def check_colleges() -> dict:
-<<<<<<< HEAD
     '''Return a list of currently listed colleges in the database from Rajasthan. Use when user wants to know about the colleges available. WHENEVER USER ASK WHAT ALL COLLEGES YOU KNOW ABOUT GIVE THIS LIST... FETCH DATA FROM DATA BASE. PROVIDE THE LIST OF AVAILABLE COLLEGES IN THE DATABASE'''
-=======
-    '''Return a list of currently listed colleges in the database from Rajasthan. Use when user wants to know about the colleges available. WHENEVER USER ASK WHAT ALL COLLEGES YOU KNOW ABOUT GIVE THIS LIST... FETCH DATA FROM DATA BASE'''
->>>>>>> a0265f7c8ddc991e4a41efef18ba2addc08c31df
     colleges = list(db.colleges.find())
     college_info = [{"name": college["name"], "id": str(college["_id"])} for college in colleges]
     print(college_info)
