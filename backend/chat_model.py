@@ -1,3 +1,5 @@
+import sys
+from time import sleep
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -9,7 +11,8 @@ import json
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from io import BytesIO
-
+from time import sleep 
+import sys
 # MongoDB connection
 client = MongoClient('mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app')
 db = client['college_database']
@@ -36,9 +39,10 @@ extractionLLM = ChatGoogleGenerativeAI(
 memory = MemorySaver()
 
 
+
 @tool
 def check_colleges() -> dict:
-    '''Return a list of currently listed colleges in the database from Rajasthan. Use when user wants to know about the colleges available'''
+    '''Return a list of currently listed colleges in the database from Rajasthan. Use when user wants to know about the colleges available. WHENEVER USER ASK WHAT ALL COLLEGES YOU KNOW ABOUT GIVE THIS LIST... FETCH DATA FROM DATA BASE'''
     colleges = list(db.colleges.find())
     college_info = [{"name": college["name"], "id": str(college["_id"])} for college in colleges]
     print(college_info)
@@ -63,18 +67,18 @@ def check_fees(name: str, type: str) -> str:
             "fees": college[type],
         }
 
-async def load_data_async(name: str)-> str:
+    
+    
+
+@tool 
+async def check_cutoff(name: str) -> str:
+    '''Return the cutoffs in a particular selected college'''
     college = db.colleges.find_one({'name': college[name]})
     if not college or 'csv_file_path' not in college:
         raise ValueError("CSV file path not found for the selected college.")
     
     loader = CSVLoader(file_path=college['csv_file_path'])
-    return await asyncio.to_thread(loader.load)
-
-data = asyncio.run(load_data_async())
-@tool 
-def check_cutoff(name: str) -> str:
-    '''Return the cutoffs in a particular selected college'''
+    data= await loader.load()
     return {
         "cutoff":data
         }
@@ -91,7 +95,7 @@ def extract_college_info(content):
     - specific_details: Any specific details or questions asked
     - user_name: The name of the person making the inquiry (if mentioned)
     
-    If any information is not available, leave the value as an empty string.
+    If any information is not available, leave the value as an empty string or 0 for numbers.
     If no relevant information is found, return an empty JSON object. 
     """
     
@@ -114,35 +118,26 @@ def extract_college_info(content):
     
     return extracted_info
 
-def generate_pdf_summary(conversation_summary):
-    buffer = BytesIO()
-    c = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-    
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, height - 50, "College Inquiry Summary")
-    
-    c.setFont("Helvetica", 12)
-    y = height - 80
-    for key, value in conversation_summary.items():
-        c.drawString(50, y, f"{key.replace('_', ' ').title()}: {value}")
-        y -= 20
-    
-    c.save()
-    buffer.seek(0)
-    return buffer
 
 def print_stream(graph, inputs, config):
      msg = ""
      toolCall = {}
      for s in graph.stream(inputs, config, stream_mode="values"):
          message = s["messages"][-1]
+         #adding only the ai chunks
+         
          if message.type == "ai":
              msg = msg + message.content
          elif message.type == "tool":
              toolCall = json.loads(message.content)
+           
+        # leaving this for testing
+         if isinstance(message, tuple):
+             print(message)
+         else:
+             message.pretty_print()
      print(msg)
-     return {"msg": msg, "toolCall": toolCall}
+     return {"msg": msg, "toolCall":toolCall}
 
 def ChatModel(id, msg):
     config = {"configurable": {"thread_id": id}}
@@ -154,30 +149,8 @@ def ChatModel(id, msg):
     except Exception as e:
         print("Error in ChatModel:", str(e))
         return {"res": {"msg": "I'm sorry, but I encountered an error. Could you please try again?", "toolCall": {}}, "info": {}}
-
-def generate_summary(conversation_history):
-    summary = extract_college_info("\n".join(conversation_history))
-    pdf_buffer = generate_pdf_summary(summary)
-    return pdf_buffer
-conversation_history = []
-
-while True:
-    user_input = input("You: ")
-    if user_input.lower() == "generate summary":
-        pdf_buffer = generate_summary(conversation_history)
-        # In a real application, you would send this buffer to the frontend for download
-        print("Summary PDF generated and ready for download.")
-        break
-    
-    result = ChatModel("user_session_id", user_input)
-    conversation_history.append(user_input)
-    conversation_history.append(result["res"]["msg"])
-    
-    print("Bot:", result["res"]["msg"])
-    print("Extracted Info:", result["info"])
-
 graph = create_react_agent(llm, tools, checkpointer=MemorySaver(), state_modifier='''You are an AI-powered Student Assistance Chatbot for the Department of Technical Education, Government of Rajasthan. Your primary role is to provide accurate and helpful information about engineering and polytechnic institutes in Rajasthan.
-
+ACCESSS THE COLLEGES INFO THROUGH THE @TOOLS AND USE THE COLLEGE NAME TO FETCH THE DATA FROM THE DATABASE. FETCH DATA FROM DATABASE ONLY ONLY ONLY.ACCESSS THE COLLEGES INFO THROUGH THE @TOOLS AND USE THE COLLEGE NAME TO FETCH THE DATA FROM THE DATABASE. FETCH DATA FROM DATABASE ONLY ONLY ONLY
 Key Points:
 1. Language: You can understand queries in English or Hindi, but always respond in the language chosen by the user at the start of the conversation.
 2. Scope: You only provide information about engineering and polytechnic colleges under the Department of Technical Education, Government of Rajasthan.
@@ -192,34 +165,30 @@ Key Points:
    - Previous year's college and branch-specific allotments all with respective to the specific college chosen by the User before, dont try to give information of some other college , if you dont know just avoid answering and say you dont have accurate information.
    - Placement opportunities all with respective to the specific college chosen by the User before, dont try to give information of some other college , if you dont know just avoid answering and say you dont have accurate information.
 
-4. Data Source: Only use the information provided in the database. Do not invent or assume information.
+4. Data Source:FETCH USING THE TOOL FECTH DATABASE.
 5. User Experience: Be polite, patient, and thorough in your responses. Use markdown, numbering, and bolding where appropriate to present information clearly.
 6. Complex Queries: If a query is too complex or outside your knowledge base, politely suggest contacting the specific college or department directly.
 7. Data Privacy: Do not share or ask for personal information.
 8. Continuous Availability: Remind users that you're available 24/7 for their queries
-9. College Selection: When a user asks about colleges or needs to select a specific college, use the check_colleges tool to fetch the list of colleges. Present this list to the user as a series of options they can choose from. For example:
-
-   "Here are the available colleges. Please select one by typing its number:
-   1. [College Name 1]
-   2. [College Name 2]
-   3. [College Name 3]"
+9. College Selection: When a user asks about colleges or needs to select a specific college, use the check_college tool to fetch the list of colleges. Present this list to the user as a series of options they can choose from.
 10. College Cut-off: When a user asks about the previous year's college and branch-specific allotments, use the check_cutoff tool to fetch the list of cutoff of that particular college selected by user.
 11. College Fees: When a user asks about the fee structure of a college, use the check_fees tool to fetch the fee structure of that particular college selected by user.
 
-Start the conversation by introducing yourself and asking how you can help with college information today. Always try to provide accurate, helpful, and efficient assistance to reduce the workload on department staff and enhance the user experience.''')
-# def main():
-#     print("Bot: Hello there! I'm your agent for today. Choose a language to continue: English or Hindi or Kannada.")
-#     while True:
-#         user_input = input("You: ")
-#         if user_input.lower() in ['exit', 'quit', 'bye']:
-#             print("Bot: Thank you! Goodbye!")
-#             sys.exit()
+Start the conversation by introducing yourself and asking how you can help with college information today. Always try to provide accurate, helpful, and efficient assistance to reduce the workload on department staff and enhance the user experience.
+
+NOTE- IF YOU DONT HAVE ANY COLLEGES IN DATABASE, DONT ANSWER ANYTHING, JUST SAY YOU DONT HAVE ANY INFORMATION. ''')
+#uncomment and run to test
+def main():
+    print("Bot: Hello there! I'm your agent for today. Choose a language to continue: English or Hindi or Kannada.")
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() in ['exit', 'quit', 'bye']:
+            print("Bot: Thank you! Goodbye!")
+            sys.exit()
         
-#         inputs = {"messages": [("user", user_input)]}
-#         print_stream(graph, inputs, config)
-#         sleep(2)  
+        inputs = {"messages": [("user", user_input)]}
+        print_stream(graph, inputs, config={"configurable": {"thread_id": "123"}})  
+        sleep(2)  
 
-# if __name__ == "__main__":
-#     main()
-
-# Example usage (you would integrate this with your frontend)
+if __name__ == "__main__":
+    main()
