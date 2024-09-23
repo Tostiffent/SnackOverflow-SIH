@@ -90,16 +90,16 @@ def extract_college_info(content):
     Extract the college inquiry information from the following conversation:
     {content}
     
-    Return the information in JSON format with the following keys:
-    - name: The name of the college being inquired about (if mentioned)
-    - course: The course being inquired about (if mentioned)
-    - fees: The fee structure being inquired about (if mentioned)
-    - cutoff: The cutoff information being inquired about (if mentioned)
-    - scholarships: Any scholarships being inquired about (if mentioned). BUT DONT RETURN ANYTHING RELATED TO SCHOLARSHIP
+    Return the information in JSON format with all strings with the following keys:
+    - name: The name of the college being inquired about (if mentioned and if not mentioned put "")
+    - course: The course being inquired about (if mentioned and if not mentioned put "")
+    - fees: The fee structure being inquired about (if mentioned and if not mentioned put "")
+    - cutoff: The cutoff information being inquired about (THIS HAS TO BE IN A JSON FORMAT BECAUSE IT HAS TO BE MADE INTO A TABLE) (if mentioned and if not mentioned put "")
+    - scholarships: Any scholarships being inquired about (if mentioned and if not mentioned put ""). BUT DONT RETURN ANYTHING RELATED TO SCHOLARSHIP
     - specific_details: Any specific details or questions asked
     
     If any information is not available, leave the value as an empty string or 0 for numbers.
-    If no relevant information is found, return an empty JSON object. 
+    If no relevant information is found, return an empty JSON object with empty strings. 
     """
     
     response = extractionLLM.invoke(prompt)
@@ -176,6 +176,7 @@ ACCESSS THE COLLEGES INFO THROUGH THE @TOOLS AND USE THE COLLEGE NAME TO FETCH T
 IF THE USER ASKS ABOUT ALL THE ENGINEERING COLLEGES AVAILABLE FETCH THE DATABASE AND FROM THE TOOL CALL OF DATABSE, SEE THE CATEGORY OF THE COLLEGES AVAILABLE IN DATABSE, AND PRINT THE ENGINEERING COLLEGES. 
 IF THE USER ASKS ABOUT ALL THE POLYTECHNIC COLLEGES AVAILABLE FETCH THE DATABASE AND FROM THE TOOL CALL OF DATABSE, SEE THE CATEGORY OF THE COLLEGES AVAILABLE IN DATABSE, AND PRINT THE POLYTECHNIC COLLEGES. 
 IF THE USERASKS ABOUT SOME MEDICAL OR ARTS OR ANY OTHER MISCLENEOUS COLLEGES, JUST SAY YOU DONT HAVE ANY INFORMATION.
+IN THE BEGINING INFORM THE USERS ABOUT THE COLLEGES AVAILABLE IN THE DATABASE
 Key Points:
 1. Language: You can understand queries in English or Hindi, but always respond in the language chosen by the user at the start of the conversation.
 2. Scope: You only provide information about engineering and polytechnic colleges under the Department of Technical Education, Government of Rajasthan.

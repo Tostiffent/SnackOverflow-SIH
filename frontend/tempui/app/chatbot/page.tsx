@@ -22,6 +22,8 @@ import "react-toastify/dist/ReactToastify.css";
 import PipecatWebSocketClient from "../voice/PipecatWebSocketClient";
 import Dropdown from "react-dropdown";
 import "react-dropdown/style.css";
+//@ts-ignore
+import { JsonToTable } from "react-json-to-table";
 
 function ChatbotPage() {
   const [messages, setMessages] = useState([
@@ -42,8 +44,10 @@ function ChatbotPage() {
   const [collegeInfo, setCollegeInfo] = useState({
     name: "",
     course: "",
-    fees: 0,
-    cutoff: 0,
+    fees: "",
+    cutoff: "",
+    scholarships: "",
+    details: "",
   });
   const collegeInfoRef = useRef(collegeInfo);
   const [isConnecting, setIsConnecting] = useState(true);
@@ -55,8 +59,9 @@ function ChatbotPage() {
   }, [collegeInfo]);
 
   const connectWebSocket = () => {
-    const socket = io("http://127.0.0.1:5000/", { transports: ["websocket"] }
-    
+    const socket = io(
+      "https://super-engine-694vvjp9qjw73rq6-5000.app.github.dev/",
+      { transports: ["websocket"] }
     );
 
     socket.on("connect", () => {
@@ -67,15 +72,51 @@ function ChatbotPage() {
     });
     socket.on("response", (data) => {
       console.log("Received response:", data);
-      let newInfo = { ...collegeInfoRef.current, ...data.info };
-      setCollegeInfo(newInfo);  // Update the state
-    
+      let newInfo = data.info;
+      let oldInfo = collegeInfoRef.current;
+      newInfo.name =
+        newInfo.name !== "" &&
+        oldInfo.name !== newInfo.name &&
+        typeof newInfo.name === "string"
+          ? newInfo.name
+          : oldInfo.name;
+      newInfo.course =
+        newInfo.course !== "" &&
+        oldInfo.course !== newInfo.course &&
+        typeof newInfo.course === "string"
+          ? newInfo.course
+          : oldInfo.course;
+      newInfo.fees =
+        newInfo.fees !== "" &&
+        oldInfo.fees !== newInfo.fees &&
+        typeof newInfo.fees !== undefined
+          ? newInfo.fees
+          : oldInfo.fees;
+      newInfo.scholarships =
+        newInfo.scholarships !== "" &&
+        oldInfo.scholarships !== newInfo.scholarships &&
+        typeof newInfo.scholarships !== undefined
+          ? newInfo.scholarships
+          : oldInfo.scholarships;
+      newInfo.cutoff =
+        newInfo.cutoff !== "" &&
+        oldInfo.cutoff !== newInfo.cutoff &&
+        typeof newInfo.cutoff !== undefined
+          ? newInfo.cutoff
+          : oldInfo.cutoff;
+      newInfo.details =
+        newInfo.details !== "" &&
+        oldInfo.details !== newInfo.details &&
+        typeof newInfo.details === "string"
+          ? newInfo.details
+          : oldInfo.details;
+      setCollegeInfo(newInfo); // Update the state
+
       setMessages((oldArray) => [
         ...oldArray,
         { sender: "bot", content: data.res.msg, toolCall: data.res.toolCall },
       ]);
     });
-    
 
     socket.on("voice_response", (data) => {
       console.log("Received response:", data);
@@ -385,30 +426,27 @@ function ChatbotPage() {
                         }`}
                       >
                         {message.toolCall &&
-                        message.toolCall.type === "events" ? (
+                        message.toolCall.type === "college_list" ? (
                           <div>
-                            <p>Select the event to book:</p>
+                            <Markdown>{message.content}</Markdown>
                             <div className="mt-2">
-                              {message.toolCall.events.map(
-                                (event: string, eventIndex: number) => (
-                                  <div
-                                    key={eventIndex}
-                                    className="bg-gray-600 p-3 rounded-md mb-2"
-                                  >
-                                    <input
-                                      type="radio"
-                                      id={event}
-                                      name={event}
-                                      onChange={() => sendMsg(event)}
-                                    />
-                                    <label htmlFor={event} className="ml-2">
-                                      {event}
-                                    </label>
-                                  </div>
-                                )
-                              )}
+                              <Dropdown
+                                //@ts-ignore
+                                options={message.toolCall.colleges.map(
+                                  (college: any) => college.name
+                                )}
+                                onChange={(e) => sendMsg(e.value)}
+                                value={
+                                  //@ts-ignore
+                                  message.toolCall.colleges.map(
+                                    (college: any) => college.name
+                                  )[0]
+                                }
+                                placeholder="Select a college"
+                              />
                             </div>
                           </div>
+<<<<<<< HEAD
                         ) : message.toolCall &&
                           message.toolCall.type === "tickets" ? (
                           <div className="flex flex-col items-start space-y-2">
@@ -437,6 +475,46 @@ function ChatbotPage() {
                             >
                               Confirm
                             </Button>
+=======
+                        ) : message.toolCall && message.toolCall?.cutoff ? (
+                          <div>
+                            <h2>Engineering Admission Ranks</h2>
+                            <table border={1} cellPadding={10}>
+                              <thead>
+                                <tr>
+                                  <th>Branch</th>
+                                  <th>Category</th>
+                                  <th>Opening Rank</th>
+                                  <th>Closing Rank</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {Object.entries(collegeInfo?.cutoff).map(
+                                  ([branch, categories]) =>
+                                    Object.entries(categories).map(
+                                      ([category, ranks], index) => (
+                                        <tr key={`${branch}-${category}`}>
+                                          {index === 0 && (
+                                            <td
+                                              rowSpan={
+                                                Object.keys(categories).length
+                                              }
+                                            >
+                                              {branch}
+                                            </td>
+                                          )}
+                                          <td>{category}</td>
+                                          {/*@ts-ignore */}
+                                          <td>{ranks["Opening Rank"]}</td>
+                                          {/*@ts-ignore */}
+                                          <td>{ranks["Closing Rank"]}</td>
+                                        </tr>
+                                      )
+                                    )
+                                )}
+                              </tbody>
+                            </table>
+>>>>>>> bd8ac7064298d3cef667ce833c89ae8e59297ddd
                           </div>
                         ) : (
                           <Markdown>{message.content}</Markdown>
@@ -550,7 +628,7 @@ function ChatbotPage() {
                   Fees
                 </h4>
                 <p>
-                  {collegeInfo.course ? (
+                  {collegeInfo.fees && collegeInfo.fees != "0" ? (
                     <Typewriter
                       options={{
                         strings: collegeInfo.fees.toString(),
@@ -572,7 +650,7 @@ function ChatbotPage() {
                   <Scissors size={25} className="mr-2 text-red-500" /> Cutoff
                 </h4>
                 <p>
-                  {collegeInfo.course ? (
+                  {collegeInfo.cutoff && collegeInfo.cutoff != "0" ? (
                     <Typewriter
                       options={{
                         strings: collegeInfo.cutoff.toString(),
@@ -594,7 +672,8 @@ function ChatbotPage() {
                   <Heart size={25} className="mr-2 text-pink-500" /> Scholarship
                 </h4>
                 <p>
-                  {collegeInfo.course ? (
+                  {collegeInfo.scholarships &&
+                  collegeInfo.scholarships != "0" ? (
                     <Typewriter
                       options={{
                         strings: collegeInfo.fees.toString(),
