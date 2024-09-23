@@ -161,17 +161,41 @@ def generate_summary(conversation_history):
     summary = extract_college_info("\n".join(conversation_history))
     pdf_buffer = generate_pdf_summary(summary)
     return pdf_buffer
+# Add this at the top of your file, after the imports
+conversation_histories = {}
+
 def ChatModel(id, msg):
     config = {"configurable": {"thread_id": id}}
     inputs = {"messages": [("user", msg)]}
+    
     try:
+        # Initialize or retrieve the conversation history for this thread
+        if id not in conversation_histories:
+            conversation_histories[id] = []
+        
+        # Add the current user message to the history
+        conversation_histories[id].append(("user", msg))
+        
+        # Run the graph with the current message
         res = print_stream(graph, inputs, config)
-        extraction = extract_college_info(res["msg"])
+        
+        # Add the bot's response to the history
+        conversation_histories[id].append(("ai", res["msg"]))
+        
+        # Limit history to last 10 messages to prevent excessive growth
+        conversation_histories[id] = conversation_histories[id][-10:]
+        
+        # Extract information from the full conversation history
+        full_conversation = "\n".join([f"{role}: {content}" for role, content in conversation_histories[id]])
+        extraction = extract_college_info(full_conversation)
+        
         return {"res": res, "info": extraction}
     except Exception as e:
         print("Error in ChatModel:", str(e))
         return {"res": {"msg": "I'm sorry, but I encountered an error. Could you please try again?", "toolCall": {}}, "info": {}}
-graph = create_react_agent(llm, tools, checkpointer=MemorySaver(), state_modifier='''You are an AI-powered Student Assistance Chatbot for the Department of Technical Education, Government of Rajasthan. Your primary role is to provide accurate and helpful information about engineering and polytechnic institutes in Rajasthan.
+
+# Update the graph creation to use the MemorySaver
+graph = create_react_agent(llm, tools, checkpointer=memory, state_modifier='''You are an AI-powered Student Assistance Chatbot for the Department of Technical Education, Government of Rajasthan. Your primary role is to provide accurate and helpful information about engineering and polytechnic institutes in Rajasthan.
 ACCESSS THE COLLEGES INFO THROUGH THE @TOOLS AND USE THE COLLEGE NAME TO FETCH THE DATA FROM THE DATABASE. FETCH DATA FROM DATABASE ONLY ONLY ONLY.ACCESSS THE COLLEGES INFO THROUGH THE @TOOLS AND USE THE COLLEGE NAME TO FETCH THE DATA FROM THE DATABASE. FETCH DATA FROM DATABASE ONLY ONLY ONLY
 IF THE USER ASKS ABOUT ALL THE ENGINEERING COLLEGES AVAILABLE FETCH THE DATABASE AND FROM THE TOOL CALL OF DATABSE, SEE THE CATEGORY OF THE COLLEGES AVAILABLE IN DATABSE, AND PRINT THE ENGINEERING COLLEGES. 
 IF THE USER ASKS ABOUT ALL THE POLYTECHNIC COLLEGES AVAILABLE FETCH THE DATABASE AND FROM THE TOOL CALL OF DATABSE, SEE THE CATEGORY OF THE COLLEGES AVAILABLE IN DATABSE, AND PRINT THE POLYTECHNIC COLLEGES. 

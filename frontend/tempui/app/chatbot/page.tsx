@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect, useRef } from "react";
 import {
   Send,
@@ -39,8 +40,7 @@ function ChatbotPage() {
   const [isVoiceBotActive, setIsVoiceBotActive] = useState(false);
   const messagesEndRef = useRef(null);
   const [ws, setWs] = useState<Socket | null>(null);
-  const [tickers, setTickers] = useState(0);
-  const [maxTickets, setMaxTickets] = useState(0);
+
   const [collegeInfo, setCollegeInfo] = useState({
     name: "",
     course: "",
@@ -51,7 +51,6 @@ function ChatbotPage() {
   });
   const collegeInfoRef = useRef(collegeInfo);
   const [isConnecting, setIsConnecting] = useState(true);
-  const [responseId, setResponseId] = useState("");
   const [responseState, setResponseState] = useState([]);
 
   useEffect(() => {
@@ -59,10 +58,7 @@ function ChatbotPage() {
   }, [collegeInfo]);
 
   const connectWebSocket = () => {
-    const socket = io(
-      "https://super-engine-694vvjp9qjw73rq6-5000.app.github.dev/",
-      { transports: ["websocket"] }
-    );
+    const socket = io("http://localhost:5000", { transports: ["websocket"] });
 
     socket.on("connect", () => {
       console.log("Connected to server");
@@ -70,46 +66,16 @@ function ChatbotPage() {
       setIsConnecting(false);
       toast.success("Connected to server");
     });
+
     socket.on("response", (data) => {
       console.log("Received response:", data);
       let newInfo = data.info;
       let oldInfo = collegeInfoRef.current;
-      newInfo.name =
-        newInfo.name !== "" &&
-        oldInfo.name !== newInfo.name &&
-        typeof newInfo.name === "string"
-          ? newInfo.name
-          : oldInfo.name;
-      newInfo.course =
-        newInfo.course !== "" &&
-        oldInfo.course !== newInfo.course &&
-        typeof newInfo.course === "string"
-          ? newInfo.course
-          : oldInfo.course;
-      newInfo.fees =
-        newInfo.fees !== "" &&
-        oldInfo.fees !== newInfo.fees &&
-        typeof newInfo.fees !== undefined
-          ? newInfo.fees
-          : oldInfo.fees;
-      newInfo.scholarships =
-        newInfo.scholarships !== "" &&
-        oldInfo.scholarships !== newInfo.scholarships &&
-        typeof newInfo.scholarships !== undefined
-          ? newInfo.scholarships
-          : oldInfo.scholarships;
-      newInfo.cutoff =
-        newInfo.cutoff !== "" &&
-        oldInfo.cutoff !== newInfo.cutoff &&
-        typeof newInfo.cutoff !== undefined
-          ? newInfo.cutoff
-          : oldInfo.cutoff;
-      newInfo.details =
-        newInfo.details !== "" &&
-        oldInfo.details !== newInfo.details &&
-        typeof newInfo.details === "string"
-          ? newInfo.details
-          : oldInfo.details;
+      newInfo = {
+        ...oldInfo,
+        ...newInfo,
+        cutoff: newInfo.cutoff || oldInfo.cutoff,
+      };
       setCollegeInfo(newInfo); // Update the state
 
       setMessages((oldArray) => [
@@ -121,7 +87,6 @@ function ChatbotPage() {
     socket.on("voice_response", (data) => {
       console.log("Received response:", data);
       let newInfo = data.info;
-      let oldInfo = collegeInfoRef.current;
       setCollegeInfo(newInfo);
       setMessages((oldArray) => [
         ...oldArray,
@@ -142,7 +107,6 @@ function ChatbotPage() {
 
       // Update maxTickets if available in the response
       if (data.res.toolCall && data.res.toolCall.available_tickets) {
-        setMaxTickets(data.res.toolCall.available_tickets);
       }
     });
 
@@ -207,82 +171,6 @@ function ChatbotPage() {
     });
   };
 
-  const createRazorpayOrder = (amount: any) => {
-    handleRazorpayScreen(amount * 100);
-    // let data = JSON.stringify({
-    //   amount: amount * 100,
-    //   currency: "INR",
-    // });
-
-    // let config = {
-    //   method: "post",
-    //   maxBodyLength: Infinity,
-    //   url: "http://localhost:5000/orders",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   data: data,
-    // };
-
-    // axios
-    //   .request(config)
-    //   .then((response: any) => {
-    //     console.log(JSON.stringify(response.data));
-    //     handleRazorpayScreen(response.data.amount);
-    //   })
-    //   .catch((error: any) => {
-    //     console.log("error at", error);
-    //   });
-  };
-
-  const handleRazorpayScreen = async (amount: any) => {
-    const res = await loadScript("https:/checkout.razorpay.com/v1/checkout.js");
-
-    if (!res) {
-      alert("Some error at razorpay screen loading");
-      return;
-    }
-
-    const options = {
-      key: "rzp_test_GcZZFDPP0jHtC4",
-      amount: amount,
-      currency: "INR",
-      name: "Swapnil Rao",
-      description: "payment to Swapnil Rao",
-      image: "https://papayacoders.com/demo.png",
-      handler: function (response: any) {
-        setResponseId(response.razorpay_payment_id);
-      },
-      prefill: {
-        name: "Swapnil Rao",
-        email: "swapnil.rao1@gmail.com",
-      },
-      theme: {
-        color: "#9d03fc",
-      },
-    };
-
-    //@ts-ignore
-    const paymentObject = new window.Razorpay(options);
-    paymentObject.open();
-  };
-
-  // const paymentFetch = (e:any) => {
-  //   e.preventDefault();
-
-  //   const paymentId = e.target.paymentId.value;
-
-  //   axios
-  //     .get(`http://localhost:5000/payment/${paymentId}`)
-  //     .then((response: any) => {
-  //       console.log(response.data);
-  //       setResponseState(response.data);
-  //     })
-  //     .catch((error: any) => {
-  //       console.log("error occures", error);
-  //     });
-  // };
-
   const sendMsg = (ms: string) => {
     if (ws && ws.connected) {
       ws.emit("send_message", { msg: ms, id: "1" });
@@ -304,6 +192,7 @@ function ChatbotPage() {
       ]);
     }
   };
+
   const handleDownloadSummary = async () => {
     try {
       const response = await fetch('http://127.0.0.1:5000/generate_summary', {
@@ -350,10 +239,7 @@ function ChatbotPage() {
         isDarkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
       } transition-colors duration-500`}
     >
-      {/* <ToastContainer
-        position="top-right"
-        theme={isDarkMode ? "dark" : "light"}
-      /> */}
+      
       <div className="flex flex-col w-full max-w-screen-2xl mx-auto p-4 lg:p-6 h-full">
         <div
           className={`flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-t-xl`}
@@ -446,46 +332,16 @@ function ChatbotPage() {
                               />
                             </div>
                           </div>
-<<<<<<< HEAD
-                        ) : message.toolCall &&
-                          message.toolCall.type === "tickets" ? (
-                          <div className="flex flex-col items-start space-y-2">
-                            <span className="text-white font-semibold">
-                              Select number of tickets required (max:{" "}
-                              {maxTickets})
-                            </span>
-                            <div className="flex items-center space-x-4 w-full">
-                              <input
-                                type="range"
-                                min="0"
-                                max={maxTickets}
-                                value={tickers}
-                                onChange={(e) =>
-                                  setTickers(parseInt(e.target.value))
-                                }
-                                className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
-                              />
-                              <span className="text-zinc-500 font-semibold min-w-[2ch]">
-                                {tickers}
-                              </span>
-                            </div>
-                            <Button
-                              onClick={() => sendMsg(tickers.toString())}
-                              className="bg-purple-600 text-white px-3 py-1 rounded-md hover:bg-purple-700 transition duration-200"
-                            >
-                              Confirm
-                            </Button>
-=======
-                        ) : message.toolCall && message.toolCall?.cutoff ? (
+                        ) : message.toolCall && 'cutoff' in message.toolCall ? (
                           <div>
                             <h2>Engineering Admission Ranks</h2>
                             <table border={1} cellPadding={10}>
                               <thead>
-                                <tr>
-                                  <th>Branch</th>
-                                  <th>Category</th>
-                                  <th>Opening Rank</th>
-                                  <th>Closing Rank</th>
+                                <tr className={`${isDarkMode?'text-black bg-transparent':'text-black'}`}>
+                                  <th className="bg-transparent">Branch</th>
+                                  <th className="bg-transparent">Category</th>
+                                  <th className="bg-transparent">Opening Rank</th>
+                                  <th className="bg-transparent">Closing Rank</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -514,7 +370,6 @@ function ChatbotPage() {
                                 )}
                               </tbody>
                             </table>
->>>>>>> bd8ac7064298d3cef667ce833c89ae8e59297ddd
                           </div>
                         ) : (
                           <Markdown>{message.content}</Markdown>
@@ -636,33 +491,43 @@ function ChatbotPage() {
                         loop: false,
                       }}
                     />
-                  ) : (
-                    "Not selected"
-                  )}
-                </p>
-              </div>
-              <div
-                className={`p-3 rounded-lg ${
-                  isDarkMode ? "bg-gray-700" : "bg-gray-200"
-                }`}
-              >
-                <h4 className="font-semibold mb-2 flex items-center">
-                  <Scissors size={25} className="mr-2 text-red-500" /> Cutoff
-                </h4>
-                <p>
-                  {collegeInfo.cutoff && collegeInfo.cutoff != "0" ? (
-                    <Typewriter
-                      options={{
-                        strings: collegeInfo.cutoff.toString(),
-                        autoStart: true,
-                        loop: false,
-                      }}
-                    />
-                  ) : (
-                    "Not selected"
-                  )}
-                </p>
-              </div>
+                                      ) : (
+                                        "Not selected"
+                                      )}
+                                    </p>
+                                  </div>
+                                  <div
+                                      className={`p-3 rounded-lg ${
+                                        isDarkMode ? "bg-gray-700" : "bg-gray-200"
+                                      }`}
+                                    >
+                                      <div className={`p-0 rounded-lg ${isDarkMode ? "bg-gray-700" : "bg-gray-200"}`}>
+                                        <h4 className="font-semibold mb-2 flex items-center">
+                                          <Scissors size={25} className="mr-2 text-red-500" /> Cutoff
+                                        </h4>
+                                        
+                                        {collegeInfo.cutoff && typeof collegeInfo.cutoff === 'object' && Object.keys(collegeInfo.cutoff).length > 0 ? (
+                                          <div>
+                                            {Object.entries(collegeInfo.cutoff).map(([key, value]) => (
+                                              <p key={key}>{`${key}: ${value}`}</p>
+                                            ))}
+                                          </div>
+                                        ) : collegeInfo.cutoff ? (
+                                          <p>
+                                            <Typewriter
+                                              options={{
+                                                strings: collegeInfo.cutoff.toString(),
+                                                autoStart: false,
+                                                loop: false,
+                                              }}
+                                            />
+                                          </p>
+                                        ) : (
+                                          <p>No cutoff information available</p>  // Fallback for no cutoff
+                                        )}
+                                      </div>
+                                    </div>
+
               <div
                 className={`p-3 rounded-lg ${
                   isDarkMode ? "bg-gray-700" : "bg-gray-200"
