@@ -1,11 +1,11 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_pymongo import PyMongo
 from bson import ObjectId
 from flask_cors import CORS
 from motor.motor_asyncio import AsyncIOMotorClient
 from flask_socketio import SocketIO
 from flask_socketio import emit
-from chat_model import ChatModel
+from chat_model import *
 import json
 
 app = Flask(__name__)
@@ -75,7 +75,18 @@ async def handle_voice_response():
     socketio.emit("voice_response", data)
     return "sent to front"
     
-
+@app.route('/generate_summary', methods=['POST'])
+def generate_summary_route():
+    messages = request.json['messages']
+    conversation_history = [f"{msg['sender']}: {msg['content']}" for msg in messages]
+    pdf_buffer = generate_summary(conversation_history)
+    
+    return send_file(
+        pdf_buffer,
+        as_attachment=True,
+        download_name='chat_summary.pdf',
+        mimetype='application/pdf'
+    )
 #event named send_message is trigger, current input format as a dict {"msg": string, "id", string}
 @socketio.on('send_message')
 def handle_send_message(msg):

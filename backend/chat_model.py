@@ -120,6 +120,23 @@ def extract_college_info(content):
     
     
     return extracted_info
+def generate_pdf_summary(conversation_summary):
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(50, height - 50, "College Inquiry Summary")
+    
+    c.setFont("Helvetica", 12)
+    y = height - 80
+    for key, value in conversation_summary.items():
+        c.drawString(50, y, f"{key.replace('_', ' ').title()}: {value}")
+        y -= 20
+    
+    c.save()
+    buffer.seek(0)
+    return buffer
 
 
 def print_stream(graph, inputs, config):
@@ -140,7 +157,10 @@ def print_stream(graph, inputs, config):
          else:
              message.pretty_print()
      return {"msg": msg, "toolCall":toolCall}
-
+def generate_summary(conversation_history):
+    summary = extract_college_info("\n".join(conversation_history))
+    pdf_buffer = generate_pdf_summary(summary)
+    return pdf_buffer
 def ChatModel(id, msg):
     config = {"configurable": {"thread_id": id}}
     inputs = {"messages": [("user", msg)]}

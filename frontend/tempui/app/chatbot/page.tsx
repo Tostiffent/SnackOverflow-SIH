@@ -13,6 +13,7 @@ import {
   Mic,
   Heart,
 } from "lucide-react";
+import { Button } from "@nextui-org/button";
 import { Socket, io } from "socket.io-client";
 import Markdown from "react-markdown";
 import Typewriter from "typewriter-effect";
@@ -262,6 +263,35 @@ function ChatbotPage() {
       ]);
     }
   };
+  const handleDownloadSummary = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/generate_summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate summary');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = 'chat_summary.pdf';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Summary downloaded successfully!');
+    } catch (error) {
+      console.error('Error downloading summary:', error);
+      toast.error('Failed to download summary. Please try again.');
+    }
+  };
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -300,7 +330,7 @@ function ChatbotPage() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <button
+            <Button
               onClick={toggleVoiceBot}
               className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors duration-200 text-white"
               aria-label={
@@ -308,8 +338,8 @@ function ChatbotPage() {
               }
             >
               {isVoiceBotActive ? <Mic size={20} /> : <MicOff size={20} />}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={toggleTheme}
               className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors duration-200 text-white"
               aria-label={
@@ -317,7 +347,7 @@ function ChatbotPage() {
               }
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+            </Button>
           </div>
         </div>
         <div
@@ -401,12 +431,12 @@ function ChatbotPage() {
                                 {tickers}
                               </span>
                             </div>
-                            <button
+                            <Button
                               onClick={() => sendMsg(tickers.toString())}
                               className="bg-purple-600 text-white px-3 py-1 rounded-md hover:bg-purple-700 transition duration-200"
                             >
                               Confirm
-                            </button>
+                            </Button>
                           </div>
                         ) : (
                           <Markdown>{message.content}</Markdown>
@@ -437,7 +467,7 @@ function ChatbotPage() {
                       }`}
                       disabled={isConnecting}
                     />
-                    <button
+                    <Button
                       onClick={handleSend}
                       className={`p-3 ${
                         isConnecting
@@ -447,7 +477,7 @@ function ChatbotPage() {
                       disabled={isConnecting}
                     >
                       <Send size={20} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </>
@@ -578,9 +608,10 @@ function ChatbotPage() {
                 </p>
               </div>
             </div>
-            <button className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+            <Button onClick={handleDownloadSummary}
+            className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
               Download Summary
-            </button>
+            </Button>
           </div>
         </div>
       </div>
