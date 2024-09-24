@@ -51,7 +51,6 @@ function ChatbotPage() {
   });
   const collegeInfoRef = useRef(collegeInfo);
   const [isConnecting, setIsConnecting] = useState(true);
-  const [responseState, setResponseState] = useState([]);
 
   useEffect(() => {
     collegeInfoRef.current = collegeInfo;
@@ -154,22 +153,6 @@ function ChatbotPage() {
     }
   };
 
-  const loadScript = (src: any) => {
-    return new Promise((resolve) => {
-      const script = document.createElement("script");
-
-      script.src = src;
-
-      script.onload = () => {
-        resolve(true);
-      };
-      script.onerror = () => {
-        resolve(false);
-      };
-
-      document.body.appendChild(script);
-    });
-  };
 
   const sendMsg = (ms: string) => {
     if (ws && ws.connected) {

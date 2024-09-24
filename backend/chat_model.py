@@ -16,7 +16,7 @@ import sys
 # MongoDB connection
 client = MongoClient('mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app')
 db = client['college_database']
-
+conversation_histories = {}
 llm = ChatGoogleGenerativeAI(
     model="gemini-1.5-flash",
     temperature=0,
@@ -97,7 +97,7 @@ def extract_college_info(content):
     - cutoff: The cutoff information being inquired about (THIS HAS TO BE IN A JSON FORMAT BECAUSE IT HAS TO BE MADE INTO A TABLE) (if mentioned and if not mentioned put "")
     - scholarships: Any scholarships being inquired about (if mentioned and if not mentioned put ""). BUT DONT RETURN ANYTHING RELATED TO SCHOLARSHIP
     - specific_details: Any specific details or questions asked
-    
+    FOR CUTOFF KEEP SENDING THE DATA IN JSON FORMAT ONCE YOU GET THE DATA FROM THE DATABASE.
     If any information is not available, leave the value as an empty string or 0 for numbers.
     If no relevant information is found, return an empty JSON object with empty strings. 
     """
@@ -161,41 +161,39 @@ def generate_summary(conversation_history):
     summary = extract_college_info("\n".join(conversation_history))
     pdf_buffer = generate_pdf_summary(summary)
     return pdf_buffer
-# Add this at the top of your file, after the imports
-conversation_histories = {}
-
 def ChatModel(id, msg):
     config = {"configurable": {"thread_id": id}}
     inputs = {"messages": [("user", msg)]}
     
     try:
-        # Initialize or retrieve the conversation history for this thread
-        if id not in conversation_histories:
-            conversation_histories[id] = []
+        # Clear the conversation history for this thread if it exists
+        if id in conversation_histories:
+            conversation_history = conversation_histories[id]
+        else:
+            conversation_history = []
+            conversation_histories[id] = conversation_history
         
         # Add the current user message to the history
-        conversation_histories[id].append(("user", msg))
+        conversation_history.append(("user", msg))
         
         # Run the graph with the current message
         res = print_stream(graph, inputs, config)
         
         # Add the bot's response to the history
-        conversation_histories[id].append(("ai", res["msg"]))
-        
-        # Limit history to last 10 messages to prevent excessive growth
-        conversation_histories[id] = conversation_histories[id][-10:]
+        conversation_history.append(("ai", res["msg"]))
         
         # Extract information from the full conversation history
-        full_conversation = "\n".join([f"{role}: {content}" for role, content in conversation_histories[id]])
+        full_conversation = "\n".join([f"{role}: {content}" for role, content in conversation_history])
         extraction = extract_college_info(full_conversation)
+        
+        # Update the conversation history with the extracted information
+        conversation_history.append(("info", extraction))
         
         return {"res": res, "info": extraction}
     except Exception as e:
         print("Error in ChatModel:", str(e))
         return {"res": {"msg": "I'm sorry, but I encountered an error. Could you please try again?", "toolCall": {}}, "info": {}}
-
-# Update the graph creation to use the MemorySaver
-graph = create_react_agent(llm, tools, checkpointer=memory, state_modifier='''You are an AI-powered Student Assistance Chatbot for the Department of Technical Education, Government of Rajasthan. Your primary role is to provide accurate and helpful information about engineering and polytechnic institutes in Rajasthan.
+graph = create_react_agent(llm, tools, checkpointer=MemorySaver(), state_modifier='''You are an AI-powered Student Assistance Chatbot for the Department of Technical Education, Government of Rajasthan. Your primary role is to provide accurate and helpful information about engineering and polytechnic institutes in Rajasthan.
 ACCESSS THE COLLEGES INFO THROUGH THE @TOOLS AND USE THE COLLEGE NAME TO FETCH THE DATA FROM THE DATABASE. FETCH DATA FROM DATABASE ONLY ONLY ONLY.ACCESSS THE COLLEGES INFO THROUGH THE @TOOLS AND USE THE COLLEGE NAME TO FETCH THE DATA FROM THE DATABASE. FETCH DATA FROM DATABASE ONLY ONLY ONLY
 IF THE USER ASKS ABOUT ALL THE ENGINEERING COLLEGES AVAILABLE FETCH THE DATABASE AND FROM THE TOOL CALL OF DATABSE, SEE THE CATEGORY OF THE COLLEGES AVAILABLE IN DATABSE, AND PRINT THE ENGINEERING COLLEGES. 
 IF THE USER ASKS ABOUT ALL THE POLYTECHNIC COLLEGES AVAILABLE FETCH THE DATABASE AND FROM THE TOOL CALL OF DATABSE, SEE THE CATEGORY OF THE COLLEGES AVAILABLE IN DATABSE, AND PRINT THE POLYTECHNIC COLLEGES. 

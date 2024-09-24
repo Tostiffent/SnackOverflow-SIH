@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import styles from "./PipecatWebSocketClient.module.css";
 
 interface PipecatWebSocketClientProps {
-  setCall: any;
+  setCall: (value: boolean) => void;
   isDarkMode: boolean;
 }
 
@@ -15,7 +15,6 @@ declare global {
 const SAMPLE_RATE = 16000;
 const NUM_CHANNELS = 1;
 const PLAY_TIME_RESET_THRESHOLD_MS = 1.0;
-const isLoading = false;
 
 const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
   setCall,
@@ -24,6 +23,10 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [isWebSocketReady, setIsWebSocketReady] = useState(false);
+  const [Frame, setFrame] = useState<any>(null);
+  const [transcript, setTranscript] = useState("");
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
+
   const wsRef = useRef<WebSocket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -32,7 +35,6 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const playTimeRef = useRef(0);
   const lastMessageTimeRef = useRef(0);
-  const [Frame, setFrame] = useState<any>(null); // Added missing state for Frame
 
   useEffect(() => {
     const loadProtobuf = () => {
@@ -55,7 +57,6 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
       script.onload = loadProtobuf;
       document.body.appendChild(script);
 
-      // Cleanup the script element on component unmount
       return () => {
         document.body.removeChild(script);
       };
@@ -87,6 +88,17 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
     console.log("WebSocket message received");
     const arrayBuffer = await event.data.arrayBuffer();
     enqueueAudioFromProto(arrayBuffer);
+    
+    // Simulating AI response and transcription
+    setIsAISpeaking(true);
+    setTranscript("AI is processing your request...");
+    setTimeout(() => {
+      setTranscript("Here's the AI response to your query.");
+      setTimeout(() => {
+        setIsAISpeaking(false);
+        setTranscript("");
+      }, 3000);
+    }, 2000);
   };
 
   const enqueueAudioFromProto = (arrayBuffer: ArrayBuffer) => {
@@ -108,8 +120,10 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
     lastMessageTimeRef.current = audioContextRef.current?.currentTime!;
 
     const audioVector = Array.from(parsedFrame.audio.audio);
-    //@ts-ignore
-    const audioArray = new Uint8Array(audioVector);
+    const audioArray = new Uint8Array(new ArrayBuffer(audioVector.length));
+    audioVector.forEach((value, index) => {
+      audioArray[index] = value as number;
+    });
 
     if (audioContextRef.current) {
       audioContextRef.current.decodeAudioData(
@@ -149,8 +163,7 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
     }
 
     audioContextRef.current = new (window.AudioContext ||
-      //@ts-ignore
-      window.webkitAudioContext)({
+      (window as any).webkitAudioContext)({
       latencyHint: "interactive",
       sampleRate: SAMPLE_RATE,
     });
@@ -182,10 +195,7 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
         audioContextRef.current.createScriptProcessor(512, 1, 1);
       sourceRef.current.connect(scriptProcessorRef.current);
       scriptProcessorRef.current.connect(audioContextRef.current.destination);
-
       scriptProcessorRef.current.onaudioprocess = (event) => {
-        //if (!wsRef.current || !isWebSocketReady) return;
-
         const audioData = event.inputBuffer.getChannelData(0);
 
         let sum = 0.0;
@@ -207,11 +217,22 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
           },
         });
         const encodedFrame = new Uint8Array(Frame.encode(frame).finish());
-        //@ts-ignore
-        wsRef.current.send(encodedFrame);
+        wsRef.current?.send(encodedFrame);
       };
 
       console.log("Audio processing set up successfully");
+      
+      // Simulating real-time transcription
+      const words = "Hello, how can I assist you today?".split(' ');
+      let index = 0;
+      const interval = setInterval(() => {
+        if (index < words.length) {
+          setTranscript(prev => prev + ' ' + words[index]);
+          index++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 500);
     } catch (error) {
       console.error("Error accessing microphone:", error);
     }
@@ -223,6 +244,7 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
     setIsPlaying(false);
     setIsWebSocketReady(false);
     setAudioLevel(0);
+    setTranscript("");
 
     if (wsRef.current && closeWebsocket) {
       wsRef.current.close();
@@ -271,6 +293,10 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
           alt="bot"
           src="https://cdn3d.iconscout.com/3d/premium/thumb/cute-robot-on-call-6374844-5272690.png"
         />
+        <div className={styles.transcriptContainer}>
+          <p className={styles.transcript}>{transcript}</p>
+          {isAISpeaking && <div className={styles.aiSpeakingIndicator}>AI is speaking...</div>}
+        </div>
       </div>
       <div className={styles.footer}>
         <button
@@ -278,7 +304,6 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
             isPlaying ? styles.stopButton : styles.startButton
           }`}
           onClick={isPlaying ? () => stopAudio(true) : startAudio}
-          disabled={isLoading}
         >
           {isPlaying ? "Stop" : "Start"}
         </button>
