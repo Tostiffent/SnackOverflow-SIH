@@ -35,25 +35,28 @@ extractionLLM = ChatGoogleGenerativeAI(
     google_api_key="AIzaSyDIG-JhAjoTJPZV_M5CGzjhIX8klNbXm3I"
 )
 
-def extract_booking_info(content):
-    print(content)
+def extract_college_info(content):
     prompt = f"""
-    Extract the booking information from the following conversation:
+    Extract the college inquiry information from the following conversation:
     {content}
     
-    Return the information in JSON format with the following keys:
-    - name: The name of the person booking (if mentioned)
-    - show: The name of the show being booked (if mentioned)
-    - number_of_tickets: The number of tickets being booked (if mentioned)
-    - total_amount: The total amount to be paid (if mentioned)
-    
+    Return the information in JSON format with all strings with the following keys:
+    - name: The name of the college being inquired about (if mentioned and if not mentioned put "")
+    - course: The course being inquired about (if mentioned and if not mentioned put "")
+    - fees: The fee structure being inquired about (if mentioned and if not mentioned put "")
+    - cutoff: The cutoff information being inquired about (THIS HAS TO BE IN A JSON FORMAT BECAUSE IT HAS TO BE MADE INTO A TABLE) (if mentioned and if not mentioned put "")
+    - scholarships: Any scholarships being inquired about (if mentioned and if not mentioned put ""). BUT DONT RETURN ANYTHING RELATED TO SCHOLARSHIP
+    - specific_details: Any specific details or questions asked
+    FOR CUTOFF KEEP SENDING THE DATA IN JSON FORMAT ONCE YOU GET THE DATA FROM THE DATABASE PLS SEND THE DATA IN JSON FORMAT
     If any information is not available, leave the value as an empty string or 0 for numbers.
-    If no relevant information is found, return an empty JSON object. 
+    If no relevant information is found, return an empty JSON object with empty strings. 
     """
     
-    response = extractionLLM.invoke(prompt)  
+    response = extractionLLM.invoke(prompt)
+    print(response)  
     try:
         extracted_info = json.loads(response.content)
+        print(extracted_info)
     except json.JSONDecodeError:
         try:
             json_start = response.content.index('{')
@@ -64,9 +67,7 @@ def extract_booking_info(content):
             print("Warning: Could not extract valid JSON from the response.")
             return {}
     
-    for key in ["name", "show", "number_of_tickets", "total_amount"]:
-        if key not in extracted_info:
-            extracted_info[key] = "" if key != "number_of_tickets" else 0
+    
     
     return extracted_info
 
@@ -97,13 +98,13 @@ class LanggraphProcessor(FrameProcessor):
             text: str = frame.messages[-1]["content"]
             extracted = {"name": "", "show": "", "number_of_tickets": 0, "total_amount": 0}
             if (frame.messages[-1]["role"] != "system"):
-                extracted = extract_booking_info(frame.messages)
+                extracted = extract_college_info(frame.messages)
                 send_data = {
                 "info": extracted,
                 "res": {"msg": [frame.messages[-2]["content"],frame.messages[-1]["content"]], "toolCall": {}}
                 }
 
-                res = requests.post(f"https://fuzzy-space-guide-r5646xqvwpqcpqpx-5000.app.github.dev/voice/response", json=send_data)
+                res = requests.post(f"https://super-engine-694vvjp9qjw73rq6-5000.app.github.dev/voice/response", json=send_data)
                 print(res)
 
             await self._ainvoke(text.strip())
