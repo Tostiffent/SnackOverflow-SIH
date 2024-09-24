@@ -70,18 +70,18 @@ def check_fees(name: str, type: str) -> str:
     
     
 
-@tool 
+@tool
 def check_cutoff(name: str) -> dict:
     '''Return the cutoffs in a particular selected college'''
     college = db.colleges.find_one({'name': name})
-    
-    if college:
+   
+    if college and 'cutoff' in college:
         return {
-            "cutoff": college["cutoff"]
+            "cutoff": college['cutoff']
         }
     else:
         return {
-            "error": f"Sorry, we don't have any information about {name}"
+            "error": f"Sorry, we don't have cutoff information for {name}"
         }
 tools = [check_courses, check_colleges, check_fees, check_cutoff]
 
@@ -97,7 +97,7 @@ def extract_college_info(content):
     - cutoff: The cutoff information being inquired about (THIS HAS TO BE IN A JSON FORMAT BECAUSE IT HAS TO BE MADE INTO A TABLE) (if mentioned and if not mentioned put "")
     - scholarships: Any scholarships being inquired about (if mentioned and if not mentioned put ""). BUT DONT RETURN ANYTHING RELATED TO SCHOLARSHIP
     - specific_details: Any specific details or questions asked
-    FOR CUTOFF KEEP SENDING THE DATA IN JSON FORMAT ONCE YOU GET THE DATA FROM THE DATABASE.
+    FOR CUTOFF KEEP SENDING THE DATA IN JSON FORMAT ONCE YOU GET THE DATA FROM THE DATABASE PLS SEND THE DATA IN JSON FORMAT
     If any information is not available, leave the value as an empty string or 0 for numbers.
     If no relevant information is found, return an empty JSON object with empty strings. 
     """
@@ -164,7 +164,6 @@ def generate_summary(conversation_history):
 def ChatModel(id, msg):
     config = {"configurable": {"thread_id": id}}
     inputs = {"messages": [("user", msg)]}
-    
     try:
         # Clear the conversation history for this thread if it exists
         if id in conversation_histories:
@@ -193,12 +192,13 @@ def ChatModel(id, msg):
     except Exception as e:
         print("Error in ChatModel:", str(e))
         return {"res": {"msg": "I'm sorry, but I encountered an error. Could you please try again?", "toolCall": {}}, "info": {}}
-graph = create_react_agent(llm, tools, checkpointer=MemorySaver(), state_modifier='''You are an AI-powered Student Assistance Chatbot for the Department of Technical Education, Government of Rajasthan. Your primary role is to provide accurate and helpful information about engineering and polytechnic institutes in Rajasthan.
+graph = create_react_agent(llm, tools, checkpointer=MemorySaver(), state_modifier='''You are an AI-powered Student Assistance Chatbot-"EduMitra" for the Department of Technical Education, Government of Rajasthan. Your primary role is to provide accurate and helpful information about engineering and polytechnic institutes in Rajasthan.
 ACCESSS THE COLLEGES INFO THROUGH THE @TOOLS AND USE THE COLLEGE NAME TO FETCH THE DATA FROM THE DATABASE. FETCH DATA FROM DATABASE ONLY ONLY ONLY.ACCESSS THE COLLEGES INFO THROUGH THE @TOOLS AND USE THE COLLEGE NAME TO FETCH THE DATA FROM THE DATABASE. FETCH DATA FROM DATABASE ONLY ONLY ONLY
 IF THE USER ASKS ABOUT ALL THE ENGINEERING COLLEGES AVAILABLE FETCH THE DATABASE AND FROM THE TOOL CALL OF DATABSE, SEE THE CATEGORY OF THE COLLEGES AVAILABLE IN DATABSE, AND PRINT THE ENGINEERING COLLEGES. 
 IF THE USER ASKS ABOUT ALL THE POLYTECHNIC COLLEGES AVAILABLE FETCH THE DATABASE AND FROM THE TOOL CALL OF DATABSE, SEE THE CATEGORY OF THE COLLEGES AVAILABLE IN DATABSE, AND PRINT THE POLYTECHNIC COLLEGES. 
 IF THE USERASKS ABOUT SOME MEDICAL OR ARTS OR ANY OTHER MISCLENEOUS COLLEGES, JUST SAY YOU DONT HAVE ANY INFORMATION.
-IN THE BEGINING INFORM THE USERS ABOUT THE COLLEGES AVAILABLE IN THE DATABASE
+IN THE BEGINING INFORM THE USERS ABOUT THE COLLEGES AVAILABLE IN THE DATABASE.
+IF SOMEONE ASK ANY IRRELEVANT QUESTION, JUST SAY YOU DONT HAVE ANY INFORMATION. ONLY TALK ABOUT COLLEGES IN RAJASTHAN AND ALL
 Key Points:
 1. Language: You can understand queries in English or Hindi, but always respond in the language chosen by the user at the start of the conversation.
 2. Scope: You only provide information about engineering and polytechnic colleges under the Department of Technical Education, Government of Rajasthan.

@@ -51,6 +51,7 @@ function ChatbotPage() {
   });
   const collegeInfoRef = useRef(collegeInfo);
   const [isConnecting, setIsConnecting] = useState(true);
+  const [responseState, setResponseState] = useState([]);
 
   useEffect(() => {
     collegeInfoRef.current = collegeInfo;
@@ -70,12 +71,43 @@ function ChatbotPage() {
       console.log("Received response:", data);
       let newInfo = data.info;
       let oldInfo = collegeInfoRef.current;
-      newInfo = {
-        ...oldInfo,
-        ...newInfo,
-        cutoff: newInfo.cutoff || oldInfo.cutoff,
-      };
-      setCollegeInfo(newInfo); // Update the state
+      newInfo.name =
+      newInfo.name !== "" &&
+      oldInfo.name !== newInfo.name &&
+      typeof newInfo.name === "string"
+        ? newInfo.name
+        : oldInfo.name;
+    newInfo.course =
+      newInfo.course !== "" &&
+      oldInfo.course !== newInfo.course &&
+      typeof newInfo.course === "string"
+        ? newInfo.course
+        : oldInfo.course;
+    newInfo.fees =
+      newInfo.fees !== "" &&
+      oldInfo.fees !== newInfo.fees &&
+      typeof newInfo.fees !== undefined
+        ? newInfo.fees
+        : oldInfo.fees;
+    newInfo.scholarships =
+      newInfo.scholarships !== "" &&
+      oldInfo.scholarships !== newInfo.scholarships &&
+      typeof newInfo.scholarships !== undefined
+        ? newInfo.scholarships
+        : oldInfo.scholarships;
+    newInfo.cutoff =
+      newInfo.cutoff !== "" &&
+      oldInfo.cutoff !== newInfo.cutoff &&
+      typeof newInfo.cutoff !== undefined
+        ? newInfo.cutoff
+        : oldInfo.cutoff;
+    newInfo.details =
+      newInfo.details !== "" &&
+      oldInfo.details !== newInfo.details &&
+      typeof newInfo.details === "string"
+        ? newInfo.details
+        : oldInfo.details;
+    setCollegeInfo(newInfo);
 
       setMessages((oldArray) => [
         ...oldArray,
@@ -152,8 +184,22 @@ function ChatbotPage() {
       }
     }
   };
+  const loadScript = (src: any) => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
 
+      script.src = src;
 
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+
+      document.body.appendChild(script);
+    });
+  };
   const sendMsg = (ms: string) => {
     if (ws && ws.connected) {
       ws.emit("send_message", { msg: ms, id: "1" });
@@ -320,7 +366,7 @@ function ChatbotPage() {
                             <h2>Engineering Admission Ranks</h2>
                             <table border={1} cellPadding={10}>
                               <thead>
-                                <tr className={`${isDarkMode?'text-black bg-transparent':'text-black'}`}>
+                                <tr className={`${isDarkMode ? 'text-black bg-transparent' : 'text-black'}`}>
                                   <th className="bg-transparent">Branch</th>
                                   <th className="bg-transparent">Category</th>
                                   <th className="bg-transparent">Opening Rank</th>
@@ -343,10 +389,8 @@ function ChatbotPage() {
                                             </td>
                                           )}
                                           <td>{category}</td>
-                                          {/*@ts-ignore */}
-                                          <td>{ranks["Opening Rank"]}</td>
-                                          {/*@ts-ignore */}
-                                          <td>{ranks["Closing Rank"]}</td>
+                                          <td>{(ranks as unknown as Record<string, any>)["Opening Rank"]}</td>
+                                          <td>{(ranks as unknown as Record<string, any>)["Closing Rank"]}</td>
                                         </tr>
                                       )
                                     )
@@ -371,14 +415,14 @@ function ChatbotPage() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           const g = handleSend();
-                        }
+                                                  }
                       }}
                       placeholder={
                         isConnecting ? "Connecting..." : "Type a message..."
                       }
                       className={`flex-grow p-3 bg-transparent focus:outline-none ${
                         isDarkMode
-                          ? "text-black placeholder-gray-400"
+                          ? "text-white placeholder-gray-400"
                           : "text-gray-900 placeholder-gray-500"
                       }`}
                       disabled={isConnecting}
@@ -506,11 +550,10 @@ function ChatbotPage() {
                                             />
                                           </p>
                                         ) : (
-                                          <p>No cutoff information available</p>  // Fallback for no cutoff
+                    <p>No cutoff information available</p>
                                         )}
                                       </div>
                                     </div>
-
               <div
                 className={`p-3 rounded-lg ${
                   isDarkMode ? "bg-gray-700" : "bg-gray-200"
@@ -542,6 +585,7 @@ function ChatbotPage() {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }
