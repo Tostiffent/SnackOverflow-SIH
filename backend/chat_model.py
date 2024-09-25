@@ -83,9 +83,24 @@ def check_cutoff(name: str) -> dict:
         return {
             "error": f"Sorry, we don't have cutoff information for {name}"
         }
-tools = [check_courses, check_colleges, check_fees, check_cutoff]
+
+@tool
+def check_scholarships(name: str) -> dict:
+    '''Return the scholarships in a particular selected college'''
+    college = db.colleges.find_one({'name': name})
+   
+    if college and 'scholarships' in college:
+        return {
+            "scholarships": college['scholarships']
+        }
+    else:
+        return {
+            "error": f"Sorry, we don't have scholarship information for {name}"
+        }
+tools = [check_courses, check_colleges, check_fees, check_cutoff, check_scholarships]
 
 def extract_college_info(content):
+    print("check content", content)
     prompt = f"""
     Extract the college inquiry information from the following conversation:
     {content}
@@ -94,10 +109,10 @@ def extract_college_info(content):
     - name: The name of the college being inquired about (if mentioned and if not mentioned put "")
     - course: The course being inquired about (if mentioned and if not mentioned put "")
     - fees: The fee structure being inquired about (if mentioned and if not mentioned put "")
-    - cutoff: The cutoff information being inquired about (THIS HAS TO BE IN A JSON FORMAT BECAUSE IT HAS TO BE MADE INTO A TABLE) (if mentioned and if not mentioned put "")
-    - scholarships: Any scholarships being inquired about (if mentioned and if not mentioned put ""). BUT DONT RETURN ANYTHING RELATED TO SCHOLARSHIP
+    - cutoff: The cutoff information being inquired about (THIS HAS TO BE IN A JSON FORMAT BECAUSE IT HAS TO BE MADE INTO A TABLE) (if mentioned and if not mentioned put ""). ALWAYS KEEP IT IN THE FORM (branch: (2024: (general: (opening_rank, closing_rank), OBC: (opening_rank, closing_rank), SC: (opening_rank, closing_rank))))
+    - scholarships: Any scholarships being inquired about (if mentioned and if not mentioned put "").
     - specific_details: Any specific details or questions asked
-    - options: All the possible questions that the model can be asked based on the current message. Return as an array of strings.  Also only say things from this category (admission process, fees, scholarships, fee quota, cutoffs, college names) .Limit yourself to 3 options and keep them as short as possible.
+    - options: All the possible questions that the model can be asked based on the current message. Return as an array of strings.  Also only say things from this category (admission process, fees, scholarships, fee quota, cutoffs, college names), do not say anything out of this list even if it's related to the message .Limit yourself to 3 options and keep them as short as possible.
     FOR CUTOFF KEEP SENDING THE DATA IN JSON FORMAT ONCE YOU GET THE DATA FROM THE DATABASE PLS SEND THE DATA IN JSON FORMAT
     If any information is not available, leave the value as an empty string or 0 for numbers.
     If no relevant information is found, return an empty JSON object with empty strings. 
