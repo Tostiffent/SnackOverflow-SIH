@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, useAnimation } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
-import { GraduationCap, Book, Users, MessageCircle, Menu, X } from 'lucide-react'
+import { GraduationCap, Book, Users, MessageCircle, Menu, X, Clock, Database, Mic } from 'lucide-react'
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -86,7 +86,7 @@ export default function LandingPage() {
             variants={fadeIn}
             transition={{ duration: 0.5 }}
           >
-            Welcome to EduMitra
+            EduMitra - Your 24/7 Virtual Admission Assistant
           </motion.h1>
           <motion.p 
             className="text-lg sm:text-xl md:text-2xl mb-12"
@@ -95,7 +95,7 @@ export default function LandingPage() {
             variants={fadeIn}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            Your AI-powered college recommendations companion. Explore colleges hassle free, get personalized assistance, and unlock your bright future.
+            Simplify your journey into Rajasthan's prestigious engineering and polytechnic institutes with AI-powered guidance.
           </motion.p>
           <motion.div 
             className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center"
@@ -107,11 +107,10 @@ export default function LandingPage() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link href="/chatbot" className="bg-white text-purple-600 hover:bg-purple-100 font-bold py-3 px-8 rounded-full transition-colors duration-200 flex items-center justify-center">
                 <MessageCircle className="mr-2" />
-                Try EduMitra AI
+                Chat with EduMitra now!
               </Link>
             </motion.div>
-            
-            </motion.div>
+          </motion.div>
         </div>
       </main>
       <section className="w-full px-4 py-16" ref={ref}>
@@ -125,14 +124,18 @@ export default function LandingPage() {
             Why Choose EduMitra?
           </motion.h2>
           <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
             initial="hidden"
             animate={controls}
             variants={staggerChildren}
           >
             {[
-              { icon: <GraduationCap className="w-16 h-16 mb-4" />, title: "Personalized Experience", description: "AI-driven college recommendations tailored to your conversational style." },
-              { icon: <MessageCircle className="w-16 h-16 mb-4" />, title: "24/7 AI Support", description: "Get instant answers to your questions, anytime, anywhere." },
+              { icon: <MessageCircle className="w-16 h-16 mb-4" />, title: "Instant Information Access", description: "Get real-time information on admissions, eligibility, fees, scholarships, and placements." },
+              { icon: <Users className="w-16 h-16 mb-4" />, title: "Personalized Guidance", description: "Receive tailored recommendations based on past trends and your goals." },
+              { icon: <Mic className="w-16 h-16 mb-4" />, title: "Voice-Based Assistance", description: "Ask questions and get responses in natural language, including regional languages." },
+              { icon: <Clock className="w-16 h-16 mb-4" />, title: "24/7 Availability", description: "Access important information anytime, anywhere, without contacting multiple colleges." },
+              { icon: <Database className="w-16 h-16 mb-4" />, title: "Data-Driven Insights", description: "Benefit from continuous improvements based on user interactions and trends." },
+              { icon: <Book className="w-16 h-16 mb-4" />, title: "Comprehensive Information", description: "Get details on admission processes, curricula, placements, and more." },
             ].map((feature, index) => (
               <motion.div 
                 key={feature.title}
@@ -153,9 +156,40 @@ export default function LandingPage() {
           </motion.div>
         </div>
       </section>
+      <section className="w-full px-4 py-16 bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.h2 
+            className="text-3xl md:text-4xl font-bold mb-8"
+            initial="hidden"
+            animate={controls}
+            variants={fadeIn}
+          >
+            Explore the Future of Education with EduMitra
+          </motion.h2>
+          <motion.p
+            className="text-lg mb-8"
+            initial="hidden"
+            animate={controls}
+            variants={fadeIn}
+          >
+            Your journey to Rajasthan's top engineering and polytechnic institutes starts here! Experience hassle-free admissions and let EduMitra be your guide.
+          </motion.p>
+          <motion.div
+            initial="hidden"
+            animate={controls}
+            variants={fadeIn}
+          >
+            <Link href="/chatbot" className="bg-white text-purple-600 hover:bg-purple-100 font-bold py-3 px-8 rounded-full transition-colors duration-200 inline-flex items-center">
+              <MessageCircle className="mr-2" />
+              Get Started with EduMitra
+            </Link>
+          </motion.div>
+        </div>
+      </section>
       <footer className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg py-8 w-full">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p>&copy; 2024 EduMitra. All rights reserved.</p>
+          <p className="mt-2">Empowering Education, Simplifying Admissions!</p>
         </div>
       </footer>
     </div>
