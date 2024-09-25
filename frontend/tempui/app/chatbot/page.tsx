@@ -25,6 +25,7 @@ import Dropdown from "react-dropdown";
 import "react-dropdown/style.css";
 //@ts-ignore
 import { JsonToTable } from "react-json-to-table";
+import CourseComparison from "./CourseComparison"; // Adjust the import path as necessary
 
 function ChatbotPage() {
   const [messages, setMessages] = useState([
@@ -60,7 +61,7 @@ function ChatbotPage() {
 
   const connectWebSocket = () => {
     const socket = io(
-      "localhost:5000",
+      "http://127.0.0.1:5000",
       { transports: ["websocket"] }
     );
 
@@ -112,8 +113,6 @@ function ChatbotPage() {
           ? newInfo.details
           : oldInfo.details;
 
-      setCollegeInfo(newInfo);
-
       setMessages((oldArray) => [
         ...oldArray,
         {
@@ -128,44 +127,6 @@ function ChatbotPage() {
     socket.on("voice_response", (data) => {
       console.log("Received response:", data);
       let newInfo = data.info;
-      let oldInfo = collegeInfoRef.current;
-      newInfo.name =
-        newInfo.name !== "" &&
-        oldInfo.name !== newInfo.name &&
-        typeof newInfo.name === "string"
-          ? newInfo.name
-          : oldInfo.name;
-      newInfo.course =
-        newInfo.course !== "" &&
-        oldInfo.course !== newInfo.course &&
-        typeof newInfo.course === "string"
-          ? newInfo.course
-          : oldInfo.course;
-      newInfo.fees =
-        newInfo.fees !== "" &&
-        oldInfo.fees !== newInfo.fees &&
-        typeof newInfo.fees !== undefined
-          ? newInfo.fees
-          : oldInfo.fees;
-      newInfo.scholarships =
-        newInfo.scholarships !== "" &&
-        oldInfo.scholarships !== newInfo.scholarships &&
-        typeof newInfo.scholarships !== undefined
-          ? newInfo.scholarships
-          : oldInfo.scholarships;
-      newInfo.cutoff =
-        newInfo.cutoff !== "" &&
-        oldInfo.cutoff !== newInfo.cutoff &&
-        typeof newInfo.cutoff !== undefined
-          ? newInfo.cutoff
-          : oldInfo.cutoff;
-      newInfo.details =
-        newInfo.details !== "" &&
-        oldInfo.details !== newInfo.details &&
-        typeof newInfo.details === "string"
-          ? newInfo.details
-          : oldInfo.details;
-
       setCollegeInfo(newInfo);
       setMessages((oldArray) => [
         ...oldArray,
@@ -221,9 +182,7 @@ function ChatbotPage() {
     //@ts-ignore
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
-  useEffect(scrollToBottom, [messages]);
-
+  useEffect(scrollToBottom, [messages]);  
   const handleSend = () => {
     if (input.trim()) {
       if (ws && ws.connected) {
@@ -277,19 +236,24 @@ function ChatbotPage() {
       ]);
     }
   };
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
+  const handleOpenComparison = () => {
+    setIsComparisonOpen(true);
+  };
+
+  const handleCloseComparison = () => {
+    setIsComparisonOpen(false);
+  };
   const handleDownloadSummary = async () => {
     try {
-      const response = await fetch(
-        "https://super-engine-694vvjp9qjw73rq6-5000.app.github.dev/generate_summary",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ messages }),
-        }
-      );
+      const response = await fetch("http://127.0.0.1:5000/generate_summary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to generate summary");
@@ -321,37 +285,6 @@ function ChatbotPage() {
 
   const options = ["one", "two", "three"];
 
-  const RankTable = ({ data }: { data: any }) => {
-    return (
-      <table border={1}>
-        <thead>
-          <tr>
-            <th>Department</th>
-            <th>Year</th>
-            <th>Category</th>
-            <th>Opening Rank</th>
-            <th>Closing Rank</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object?.keys(data)?.map((department) =>
-            Object?.keys(data[department])?.map((year) =>
-              Object?.keys(data[department][year])?.map((category) => (
-                <tr key={`${department}-${year}-${category}`}>
-                  <td>{department}</td>
-                  <td>{year}</td>
-                  <td>{category}</td>
-                  <td>{data[department][year][category][0]}</td>
-                  <td>{data[department][year][category][1]}</td>
-                </tr>
-              ))
-            )
-          )}
-        </tbody>
-      </table>
-    );
-  };
-
   return (
     <div
       className={`flex h-screen w-full ${
@@ -364,7 +297,7 @@ function ChatbotPage() {
         >
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-white text-purple-600 flex items-center justify-center font-bold text-xl mr-3">
-              EM
+              TT
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">EduMitra</h2>
@@ -453,23 +386,81 @@ function ChatbotPage() {
                         ) : message.toolCall && "cutoff" in message.toolCall ? (
                           <div>
                             <h2>Engineering Admission Ranks</h2>
-                            <RankTable data={collegeInfo?.cutoff} />
+                            <table border={1} cellPadding={10}>
+                              <thead>
+                                <tr
+                                  className={`${
+                                    isDarkMode
+                                      ? "text-black bg-transparent"
+                                      : "text-black"
+                                  }`}
+                                >
+                                  <th className="bg-transparent">Branch</th>
+                                  <th className="bg-transparent">Category</th>
+                                  <th className="bg-transparent">
+                                    Opening Rank
+                                  </th>
+                                  <th className="bg-transparent">
+                                    Closing Rank
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {Object.entries(collegeInfo?.cutoff).map(
+                                  ([branch, categories]) =>
+                                    Object.entries(categories).map(
+                                      ([category, ranks], index) => (
+                                        <tr key={`${branch}-${category}`}>
+                                          {index === 0 && (
+                                            <td
+                                              rowSpan={
+                                                Object.keys(categories).length
+                                              }
+                                            >
+                                              {branch}
+                                            </td>
+                                          )}
+                                          <td>{category}</td>
+                                          <td>
+                                            {
+                                              (
+                                                ranks as unknown as Record<
+                                                  string,
+                                                  any
+                                                >
+                                              )["Opening Rank"]
+                                            }
+                                          </td>
+                                          <td>
+                                            {
+                                              (
+                                                ranks as unknown as Record<
+                                                  string,
+                                                  any
+                                                >
+                                              )["Closing Rank"]
+                                            }
+                                          </td>
+                                        </tr>
+                                      )
+                                    )
+                                )}
+                              </tbody>
+                            </table>
                           </div>
                         ) : (
                           <Markdown>{message.content}</Markdown>
                         )}
                         <div>
-                          {message.toolCall.type !== "college_list"
-                            ? message?.options?.map((option) => (
-                                <Button
-                                  key={option}
-                                  onClick={() => sendMsg(option)}
-                                  className={styles["custom-button"]}
-                                >
-                                  {option}
-                                </Button>
-                              ))
-                            : null}
+                          {message?.options?.map((option) => (
+                            <Button
+                              key={option}
+                              onClick={() => sendMsg(option)}
+                              className={styles["custom-button"]}
+                            >
+                              {option}
+                            </Button>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -613,18 +604,8 @@ function ChatbotPage() {
                   Object.keys(collegeInfo.cutoff).length > 0 ? (
                     <div>
                       {Object.entries(collegeInfo.cutoff).map(
-                        ([department, years]) => (
-                          <div key={department}>
-                            {Object.entries(years).map(([year, categories]) => (
-                              <div key={year}>
-                                {categories.General && (
-                                  <div>
-                                    <p>{`${department}: ${categories.General[1]}`}</p>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
+                        ([key, value]) => (
+                          <p key={key}>{`${key}: ${value}`}</p>
                         )
                       )}
                     </div>
@@ -656,7 +637,7 @@ function ChatbotPage() {
                   collegeInfo.scholarships != "0" ? (
                     <Typewriter
                       options={{
-                        strings: collegeInfo.scholarships.toString(),
+                        strings: collegeInfo.fees.toString(),
                         autoStart: true,
                         loop: false,
                       }}
@@ -667,16 +648,46 @@ function ChatbotPage() {
                 </p>
               </div>
             </div>
-            <Button
-              onClick={handleDownloadSummary}
-              className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
-            >
-              Download Summary
-            </Button>
+            <div className="space-y-4">
+              {" "}
+              {/* Added vertical spacing */}
+              <div className="mt-4">
+                {" "}
+                {/* Margin-top for gap above the first button */}
+                <Button
+                  onClick={handleDownloadSummary}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+                >
+                  Download Summary
+                </Button>
+              </div>
+              <div className="flex space-x-2">
+                {" "}
+                {/* Flex container for horizontal spacing */}
+                  <Button
+                  
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+                  >
+                    Take Course Selection Quiz
+                  </Button>
+                <Button
+                  onClick={handleOpenComparison}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+                >
+                  Course Vs Course
+                </Button>
+              </div>
+              <div className="mb-4"></div>{" "}
+              {/* Margin-bottom for gap below the last button */}
+            </div>
           </div>
         </div>
       </div>
       <ToastContainer />
+      {isComparisonOpen && (
+        <CourseComparison onClose={handleCloseComparison} />
+      )}{" "}
+      {/* Render the CourseComparison popup */}
     </div>
   );
 }
