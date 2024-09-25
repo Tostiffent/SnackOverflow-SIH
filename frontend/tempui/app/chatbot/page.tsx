@@ -60,7 +60,7 @@ function ChatbotPage() {
 
   const connectWebSocket = () => {
     const socket = io(
-      "https://super-engine-694vvjp9qjw73rq6-5000.app.github.dev/",
+      "localhost:5000",
       { transports: ["websocket"] }
     );
 
@@ -364,7 +364,7 @@ function ChatbotPage() {
         >
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-white text-purple-600 flex items-center justify-center font-bold text-xl mr-3">
-              TT
+              EM
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">EduMitra</h2>
