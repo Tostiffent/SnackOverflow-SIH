@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import coursesData from "./data/data.json"; // Adjust the path as necessary
-import Modal from "./Modal"; // Import your Modal component
+import coursesData from "./data/data.json"; 
+import Modal from "./Modal"; 
 
 interface Course {
   name: string;
@@ -61,7 +61,7 @@ const CourseComparison: React.FC<CourseComparisonProps> = ({ onClose }) => {
         <select
           value={course1}
           onChange={handleCourse1Change}
-          className="w-full p-2 border rounded bg-white"
+          className="w-full p-2 border rounded bg-white text-black"
         >
           <option value="">Select a course</option>
           {(coursesData as CoursesData).courses.map((course) => (
@@ -76,9 +76,9 @@ const CourseComparison: React.FC<CourseComparisonProps> = ({ onClose }) => {
         <select
           value={course2}
           onChange={handleCourse2Change}
-          className="w-full p-2 border rounded bg-white"
+          className="w-full p-2 border rounded bg-white text-black"
         >
-          <option value="">Select a course</option>
+          <option value="" className="text-black">Select a course</option>
           {(coursesData as CoursesData).courses.map((course) => (
             <option key={course.name} value={course.name}>
               {course.name}
@@ -88,13 +88,13 @@ const CourseComparison: React.FC<CourseComparisonProps> = ({ onClose }) => {
       </div>
       <button
   onClick={handleCompare}
-  className="bg-gradient-to-r from-blue-600 to-green-600 text-white py-2 px-4 rounded-md font-bold hover:from-blue-700 hover:to-green-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 mr-4" // Added margin-right for spacing
+  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-md font-bold  transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2  focus:ring-opacity-50 mr-4" // Added margin-right for spacing
 >
   Compare
 </button>
 <button
   onClick={onClose}
-  className="bg-gradient-to-r from-blue-600 to-green-600 text-white py-2 px-4 rounded-md font-bold hover:from-blue-700 hover:to-green-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-md font-bold transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2  focus:ring-opacity-50"
 >
   Close Sidebar
 </button>
@@ -185,3 +185,7 @@ const CourseComparison: React.FC<CourseComparisonProps> = ({ onClose }) => {
 };
 
 export default CourseComparison;
+function setIsDarkMode(arg0: boolean) {
+  throw new Error("Function not implemented.");
+}
+
