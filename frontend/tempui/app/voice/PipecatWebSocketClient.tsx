@@ -66,7 +66,7 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
   const initWebSocket = () => {
     console.log("Initializing WebSocket...");
     wsRef.current = new WebSocket(
-      "https://fuzzy-space-guide-r5646xqvwpqcpqpx-8765.app.github.dev/"
+      "https://super-engine-694vvjp9qjw73rq6-8765.app.github.dev/"
     );
     wsRef.current.addEventListener("open", () => {
       console.log("WebSocket connection established.");
@@ -88,7 +88,7 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
     console.log("WebSocket message received");
     const arrayBuffer = await event.data.arrayBuffer();
     enqueueAudioFromProto(arrayBuffer);
-    
+
     // Simulating AI response and transcription
     setIsAISpeaking(true);
     setTranscript("AI is processing your request...");
@@ -221,13 +221,13 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
       };
 
       console.log("Audio processing set up successfully");
-      
+
       // Simulating real-time transcription
-      const words = "Hello, how can I assist you today?".split(' ');
+      const words = "Hello, how can I assist you today?".split(" ");
       let index = 0;
       const interval = setInterval(() => {
         if (index < words.length) {
-          setTranscript(prev => prev + ' ' + words[index]);
+          setTranscript((prev) => prev + " " + words[index]);
           index++;
         } else {
           clearInterval(interval);
@@ -295,7 +295,9 @@ const PipecatWebSocketClient: React.FC<PipecatWebSocketClientProps> = ({
         />
         <div className={styles.transcriptContainer}>
           <p className={styles.transcript}>{transcript}</p>
-          {isAISpeaking && <div className={styles.aiSpeakingIndicator}>AI is speaking...</div>}
+          {isAISpeaking && (
+            <div className={styles.aiSpeakingIndicator}>AI is speaking...</div>
+          )}
         </div>
       </div>
       <div className={styles.footer}>

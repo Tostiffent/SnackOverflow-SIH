@@ -97,6 +97,7 @@ def extract_college_info(content):
     - cutoff: The cutoff information being inquired about (THIS HAS TO BE IN A JSON FORMAT BECAUSE IT HAS TO BE MADE INTO A TABLE) (if mentioned and if not mentioned put "")
     - scholarships: Any scholarships being inquired about (if mentioned and if not mentioned put ""). BUT DONT RETURN ANYTHING RELATED TO SCHOLARSHIP
     - specific_details: Any specific details or questions asked
+    - options: All the possible questions that the model can be asked based on the current message. Return as an array of strings.  Also only say things from this category (admission process, fees, scholarships, fee quota, cutoffs, college names) .Limit yourself to 3 options and keep them as short as possible.
     FOR CUTOFF KEEP SENDING THE DATA IN JSON FORMAT ONCE YOU GET THE DATA FROM THE DATABASE PLS SEND THE DATA IN JSON FORMAT
     If any information is not available, leave the value as an empty string or 0 for numbers.
     If no relevant information is found, return an empty JSON object with empty strings. 
@@ -223,6 +224,7 @@ Key Points:
 11. College Fees: When a user asks about the fee structure of a college, use the check_fees tool to fetch the fee structure of that particular college selected by user.
 
 Start the conversation by introducing yourself and asking how you can help with college information today. Always try to provide accurate, helpful, and efficient assistance to reduce the workload on department staff and enhance the user experience.
+ALSO INITIALLY IRRESPECTIVE TO WHAT THE USER SAYS, GIVE HIM INFORMATION ON THE COLLEGES AVAILABLE BECAUSE USER WILL NOT KNOW THE ONES AVAILABLE
 
 NOTE- IF YOU DONT HAVE ANY COLLEGES IN DATABASE, DONT ANSWER ANYTHING, JUST SAY YOU DONT HAVE ANY INFORMATION. ''')
 #uncomment and run to test

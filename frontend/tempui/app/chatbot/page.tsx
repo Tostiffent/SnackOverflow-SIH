@@ -1,5 +1,5 @@
 "use client";
-
+import styles from "./page.module.css";
 import { useState, useEffect, useRef } from "react";
 import {
   Send,
@@ -32,6 +32,7 @@ function ChatbotPage() {
       sender: "bot",
       content: "Hello welcome to EduMitra, Say hello 👋 to get started ",
       toolCall: { type: "none", events: [] },
+      options: ["hello", "engineering", "polytechnic"],
     },
   ]);
   const [input, setInput] = useState("");
@@ -58,7 +59,10 @@ function ChatbotPage() {
   }, [collegeInfo]);
 
   const connectWebSocket = () => {
-    const socket = io("http://localhost:5000", { transports: ["websocket"] });
+    const socket = io(
+      "https://super-engine-694vvjp9qjw73rq6-5000.app.github.dev/",
+      { transports: ["websocket"] }
+    );
 
     socket.on("connect", () => {
       console.log("Connected to server");
@@ -72,46 +76,50 @@ function ChatbotPage() {
       let newInfo = data.info;
       let oldInfo = collegeInfoRef.current;
       newInfo.name =
-      newInfo.name !== "" &&
-      oldInfo.name !== newInfo.name &&
-      typeof newInfo.name === "string"
-        ? newInfo.name
-        : oldInfo.name;
-    newInfo.course =
-      newInfo.course !== "" &&
-      oldInfo.course !== newInfo.course &&
-      typeof newInfo.course === "string"
-        ? newInfo.course
-        : oldInfo.course;
-    newInfo.fees =
-      newInfo.fees !== "" &&
-      oldInfo.fees !== newInfo.fees &&
-      typeof newInfo.fees !== undefined
-        ? newInfo.fees
-        : oldInfo.fees;
-    newInfo.scholarships =
-      newInfo.scholarships !== "" &&
-      oldInfo.scholarships !== newInfo.scholarships &&
-      typeof newInfo.scholarships !== undefined
-        ? newInfo.scholarships
-        : oldInfo.scholarships;
-    newInfo.cutoff =
-      newInfo.cutoff !== "" &&
-      oldInfo.cutoff !== newInfo.cutoff &&
-      typeof newInfo.cutoff !== undefined
-        ? newInfo.cutoff
-        : oldInfo.cutoff;
-    newInfo.details =
-      newInfo.details !== "" &&
-      oldInfo.details !== newInfo.details &&
-      typeof newInfo.details === "string"
-        ? newInfo.details
-        : oldInfo.details;
-    setCollegeInfo(newInfo);
+        newInfo.name !== "" &&
+        oldInfo.name !== newInfo.name &&
+        typeof newInfo.name === "string"
+          ? newInfo.name
+          : oldInfo.name;
+      newInfo.course =
+        newInfo.course !== "" &&
+        oldInfo.course !== newInfo.course &&
+        typeof newInfo.course === "string"
+          ? newInfo.course
+          : oldInfo.course;
+      newInfo.fees =
+        newInfo.fees !== "" &&
+        oldInfo.fees !== newInfo.fees &&
+        typeof newInfo.fees !== undefined
+          ? newInfo.fees
+          : oldInfo.fees;
+      newInfo.scholarships =
+        newInfo.scholarships !== "" &&
+        oldInfo.scholarships !== newInfo.scholarships &&
+        typeof newInfo.scholarships !== undefined
+          ? newInfo.scholarships
+          : oldInfo.scholarships;
+      newInfo.cutoff =
+        newInfo.cutoff !== "" &&
+        oldInfo.cutoff !== newInfo.cutoff &&
+        typeof newInfo.cutoff !== undefined
+          ? newInfo.cutoff
+          : oldInfo.cutoff;
+      newInfo.details =
+        newInfo.details !== "" &&
+        oldInfo.details !== newInfo.details &&
+        typeof newInfo.details === "string"
+          ? newInfo.details
+          : oldInfo.details;
 
       setMessages((oldArray) => [
         ...oldArray,
-        { sender: "bot", content: data.res.msg, toolCall: data.res.toolCall },
+        {
+          sender: "bot",
+          content: data.res.msg,
+          toolCall: data.res.toolCall,
+          options: newInfo?.options,
+        },
       ]);
     });
 
@@ -125,6 +133,7 @@ function ChatbotPage() {
           sender: "bot",
           content: data.res.msg[0],
           toolCall: data.res.toolCall,
+          options: [],
         },
       ]);
       setMessages((oldArray) => [
@@ -133,6 +142,7 @@ function ChatbotPage() {
           sender: "user",
           content: data.res.msg[1],
           toolCall: data.res.toolCall,
+          options: [],
         },
       ]);
 
@@ -205,7 +215,12 @@ function ChatbotPage() {
       ws.emit("send_message", { msg: ms, id: "1" });
       setMessages((oldArray) => [
         ...oldArray,
-        { sender: "user", content: ms, toolCall: { type: "none", events: [] } },
+        {
+          sender: "user",
+          content: ms,
+          toolCall: { type: "none", events: [] },
+          options: [],
+        },
       ]);
       setInput("");
     } else {
@@ -217,6 +232,7 @@ function ChatbotPage() {
           content:
             "Sorry, I'm having trouble connecting. Please try again in a moment.",
           toolCall: { type: "none", events: [] },
+          options: [],
         },
       ]);
     }
@@ -224,31 +240,31 @@ function ChatbotPage() {
 
   const handleDownloadSummary = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/generate_summary', {
-        method: 'POST',
+      const response = await fetch("http://127.0.0.1:5000/generate_summary", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ messages }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate summary');
+        throw new Error("Failed to generate summary");
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
+      const a = document.createElement("a");
+      a.style.display = "none";
       a.href = url;
-      a.download = 'chat_summary.pdf';
+      a.download = "chat_summary.pdf";
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      toast.success('Summary downloaded successfully!');
+      toast.success("Summary downloaded successfully!");
     } catch (error) {
-      console.error('Error downloading summary:', error);
-      toast.error('Failed to download summary. Please try again.');
+      console.error("Error downloading summary:", error);
+      toast.error("Failed to download summary. Please try again.");
     }
   };
 
@@ -268,7 +284,6 @@ function ChatbotPage() {
         isDarkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
       } transition-colors duration-500`}
     >
-      
       <div className="flex flex-col w-full max-w-screen-2xl mx-auto p-4 lg:p-6 h-full">
         <div
           className={`flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-t-xl`}
@@ -361,16 +376,26 @@ function ChatbotPage() {
                               />
                             </div>
                           </div>
-                        ) : message.toolCall && 'cutoff' in message.toolCall ? (
+                        ) : message.toolCall && "cutoff" in message.toolCall ? (
                           <div>
                             <h2>Engineering Admission Ranks</h2>
                             <table border={1} cellPadding={10}>
                               <thead>
-                                <tr className={`${isDarkMode ? 'text-black bg-transparent' : 'text-black'}`}>
+                                <tr
+                                  className={`${
+                                    isDarkMode
+                                      ? "text-black bg-transparent"
+                                      : "text-black"
+                                  }`}
+                                >
                                   <th className="bg-transparent">Branch</th>
                                   <th className="bg-transparent">Category</th>
-                                  <th className="bg-transparent">Opening Rank</th>
-                                  <th className="bg-transparent">Closing Rank</th>
+                                  <th className="bg-transparent">
+                                    Opening Rank
+                                  </th>
+                                  <th className="bg-transparent">
+                                    Closing Rank
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -389,8 +414,26 @@ function ChatbotPage() {
                                             </td>
                                           )}
                                           <td>{category}</td>
-                                          <td>{(ranks as unknown as Record<string, any>)["Opening Rank"]}</td>
-                                          <td>{(ranks as unknown as Record<string, any>)["Closing Rank"]}</td>
+                                          <td>
+                                            {
+                                              (
+                                                ranks as unknown as Record<
+                                                  string,
+                                                  any
+                                                >
+                                              )["Opening Rank"]
+                                            }
+                                          </td>
+                                          <td>
+                                            {
+                                              (
+                                                ranks as unknown as Record<
+                                                  string,
+                                                  any
+                                                >
+                                              )["Closing Rank"]
+                                            }
+                                          </td>
                                         </tr>
                                       )
                                     )
@@ -401,9 +444,21 @@ function ChatbotPage() {
                         ) : (
                           <Markdown>{message.content}</Markdown>
                         )}
+                        <div>
+                          {message?.options?.map((option) => (
+                            <Button
+                              key={option}
+                              onClick={() => sendMsg(option)}
+                              className={styles["custom-button"]}
+                            >
+                              {option}
+                            </Button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ))}
+
                   <div ref={messagesEndRef} />
                 </div>
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700">
@@ -415,7 +470,7 @@ function ChatbotPage() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           const g = handleSend();
-                                                  }
+                        }
                       }}
                       placeholder={
                         isConnecting ? "Connecting..." : "Type a message..."
@@ -518,42 +573,50 @@ function ChatbotPage() {
                         loop: false,
                       }}
                     />
-                                      ) : (
-                                        "Not selected"
-                                      )}
-                                    </p>
-                                  </div>
-                                  <div
-                                      className={`p-3 rounded-lg ${
-                                        isDarkMode ? "bg-gray-700" : "bg-gray-200"
-                                      }`}
-                                    >
-                                      <div className={`p-0 rounded-lg ${isDarkMode ? "bg-gray-700" : "bg-gray-200"}`}>
-                                        <h4 className="font-semibold mb-2 flex items-center">
-                                          <Scissors size={25} className="mr-2 text-red-500" /> Cutoff
-                                        </h4>
-                                        
-                                        {collegeInfo.cutoff && typeof collegeInfo.cutoff === 'object' && Object.keys(collegeInfo.cutoff).length > 0 ? (
-                                          <div>
-                                            {Object.entries(collegeInfo.cutoff).map(([key, value]) => (
-                                              <p key={key}>{`${key}: ${value}`}</p>
-                                            ))}
-                                          </div>
-                                        ) : collegeInfo.cutoff ? (
-                                          <p>
-                                            <Typewriter
-                                              options={{
-                                                strings: collegeInfo.cutoff.toString(),
-                                                autoStart: false,
-                                                loop: false,
-                                              }}
-                                            />
-                                          </p>
-                                        ) : (
+                  ) : (
+                    "Not selected"
+                  )}
+                </p>
+              </div>
+              <div
+                className={`p-3 rounded-lg ${
+                  isDarkMode ? "bg-gray-700" : "bg-gray-200"
+                }`}
+              >
+                <div
+                  className={`p-0 rounded-lg ${
+                    isDarkMode ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                >
+                  <h4 className="font-semibold mb-2 flex items-center">
+                    <Scissors size={25} className="mr-2 text-red-500" /> Cutoff
+                  </h4>
+
+                  {collegeInfo.cutoff &&
+                  typeof collegeInfo.cutoff === "object" &&
+                  Object.keys(collegeInfo.cutoff).length > 0 ? (
+                    <div>
+                      {Object.entries(collegeInfo.cutoff).map(
+                        ([key, value]) => (
+                          <p key={key}>{`${key}: ${value}`}</p>
+                        )
+                      )}
+                    </div>
+                  ) : collegeInfo.cutoff ? (
+                    <p>
+                      <Typewriter
+                        options={{
+                          strings: collegeInfo.cutoff.toString(),
+                          autoStart: false,
+                          loop: false,
+                        }}
+                      />
+                    </p>
+                  ) : (
                     <p>No cutoff information available</p>
-                                        )}
-                                      </div>
-                                    </div>
+                  )}
+                </div>
+              </div>
               <div
                 className={`p-3 rounded-lg ${
                   isDarkMode ? "bg-gray-700" : "bg-gray-200"
@@ -578,8 +641,10 @@ function ChatbotPage() {
                 </p>
               </div>
             </div>
-            <Button onClick={handleDownloadSummary}
-            className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+            <Button
+              onClick={handleDownloadSummary}
+              className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+            >
               Download Summary
             </Button>
           </div>
