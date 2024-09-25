@@ -1,0 +1,356 @@
+{
+  "courses": [
+    {
+      "name": "Computer Science and Engineering (CSE)",
+      "scope": "Software development, algorithms, data structures, computer systems",
+      "career_paths": [
+        "Software developer",
+        "Data scientist",
+        "Systems analyst",
+        "Network engineer"
+      ],
+      "skills_required": [
+        "Problem-solving",
+        "Logical reasoning",
+        "Programming skills",
+        "Mathematics"
+      ],
+      "specializations": [
+        "AI and Machine Learning",
+        "Cybersecurity",
+        "Cloud Computing",
+        "Software Engineering"
+      ],
+      "average_salary": "₹8-12 LPA",
+      "job_outlook": "High demand in IT industry, software development, data science",
+      "course_duration": "4 years",
+      "core_subjects": [
+        "Programming Fundamentals",
+        "Data Structures and Algorithms",
+        "Computer Networks",
+        "Operating Systems",
+        "Database Management Systems"
+      ]
+    },
+    {
+      "name": "Mechanical Engineering",
+      "scope": "Design, development, production, and testing of mechanical systems, machinery, and devices",
+      "career_paths": [
+        "Mechanical engineer",
+        "Manufacturing engineer",
+        "Design engineer",
+        "Automotive engineer"
+      ],
+      "skills_required": [
+        "Problem-solving",
+        "Creativity",
+        "Mechanical aptitude",
+        "Mathematics"
+      ],
+      "specializations": [
+        "Automotive Engineering",
+        "Mechatronics",
+        "Robotics",
+        "Energy Engineering"
+      ],
+      "average_salary": "₹6-8 LPA",
+      "job_outlook": "Strong demand in manufacturing, automotive, and energy sectors",
+      "course_duration": "4 years",
+      "core_subjects": [
+        "Engineering Mechanics",
+        "Thermodynamics",
+        "Fluid Mechanics",
+        "Machine Design",
+        "Manufacturing Processes"
+      ]
+    },
+    {
+      "name": "Electrical Engineering",
+      "scope": "Design, development, and testing of electrical circuits, components, and systems",
+      "career_paths": [
+        "Electrical engineer",
+        "Power engineer",
+        "Electronics engineer",
+        "Control systems engineer"
+      ],
+      "skills_required": [
+        "Problem-solving",
+        "Analytical thinking",
+        "Circuit analysis",
+        "Mathematics"
+      ],
+      "specializations": [
+        "Power Systems",
+        "Control Systems",
+        "Electronics",
+        "Communication Systems"
+      ],
+      "average_salary": "₹6-10 LPA",
+      "job_outlook": "Good demand in power generation, transmission, and distribution, electronics, and automation industries",
+      "course_duration": "4 years",
+      "core_subjects": [
+        "Circuit Theory",
+        "Electromagnetism",
+        "Analog and Digital Electronics",
+        "Control Systems",
+        "Power Systems"
+      ]
+    },
+    {
+      "name": "Civil Engineering",
+      "scope": "Design, construction, and maintenance of infrastructure, including roads, bridges, buildings, and water supply systems",
+      "career_paths": [
+        "Civil engineer",
+        "Structural engineer",
+        "Transportation engineer",
+        "Environmental engineer"
+      ],
+      "skills_required": [
+        "Problem-solving",
+        "Creativity",
+        "Structural analysis",
+        "Mathematics"
+      ],
+      "specializations": [
+        "Structural Engineering",
+        "Transportation Engineering",
+        "Environmental Engineering",
+        "Geotechnical Engineering"
+      ],
+      "average_salary": "₹5-8 LPA",
+      "job_outlook": "Steady demand in infrastructure development and construction sectors",
+      "course_duration": "4 years",
+      "core_subjects": [
+        "Structural Analysis",
+        "Fluid Mechanics",
+        "Geotechnical Engineering",
+        "Transportation Engineering",
+        "Construction Management"
+      ]
+    },
+    {
+      "name": "Artificial Intelligence (AI)",
+      "scope": "Development of intelligent systems capable of performing tasks that typically require human intelligence",
+      "career_paths": [
+        "AI researcher",
+        "Machine learning engineer",
+        "Data scientist",
+        "Robotics engineer"
+      ],
+      "skills_required": [
+        "Problem-solving",
+        "Logical reasoning",
+        "Programming skills",
+        "Mathematics"
+      ],
+      "specializations": [
+        "Machine Learning",
+        "Natural Language Processing",
+        "Computer Vision",
+        "Robotics"
+      ],
+      "average_salary": "₹10-15 LPA",
+      "job_outlook": "High demand in tech industry, especially in areas like automation, healthcare, and finance",
+      "course_duration": "4 years",
+      "core_subjects": [
+        "Programming Fundamentals",
+        "Data Structures and Algorithms",
+        "Machine Learning",
+        "Artificial Intelligence",
+        "Neural Networks"
+      ]
+    },
+    {
+      "name": "Data Science",
+      "scope": "Analysis of large datasets to extract meaningful insights and make informed decisions",
+      "career_paths": [
+        "Data scientist",
+        "Data analyst",
+        "Business analyst",
+        "Data engineer"
+      ],
+      "skills_required": [
+        "Problem-solving",
+        "Statistical analysis",
+        "Programming skills",
+        "Mathematics"
+      ],
+      "specializations": [
+        "Machine Learning",
+        "Data Visualization",
+        "Big Data Analytics",
+        "Data Mining"
+      ],
+      "average_salary": "₹8-12 LPA",
+      "job_outlook": "High demand in various industries due to the growing importance of data-driven decision making",
+      "course_duration": "4 years",
+      "core_subjects": [
+        "Statistics",
+        "Probability",
+        "Programming Fundamentals",
+        "Data Structures and Algorithms",
+        "Machine Learning"
+      ]
+    },
+    {
+      "name": "Biomedical Engineering",
+      "scope": "Combining engineering principles with biological and medical sciences to develop medical devices and technologies",
+      "career_paths": [
+        "Biomedical engineer",
+        "Medical device engineer",
+        "Healthcare technology consultant",
+        "Research scientist"
+      ],
+      "skills_required": [
+        "Problem-solving",
+        "Creativity",
+        "Understanding of biology and medicine",
+        "Engineering principles"
+      ],
+      "specializations": [
+        "Medical Imaging",
+        "Biomaterials",
+        "Biomechanics",
+        "Bioinformatics"
+      ],
+      "average_salary": "₹7-10 LPA",
+      "job_outlook": "Growing demand in healthcare industry due to advancements in medical technology",
+      "course_duration": "4 years",
+      "core_subjects": [
+        "Biology",
+        "Chemistry",
+        "Physics",
+        "Engineering Mechanics",
+        "Electronics"
+      ]
+    },
+    {
+      "name": "Aerospace Engineering",
+      "scope": "Design, development, and testing of aircraft, spacecraft, and related systems",
+      "career_paths": [
+        "Aerospace engineer",
+        "Aeronautical engineer",
+        "Astronaut",
+        "Aerospace research scientist"
+      ],
+      "skills_required": [
+        "Problem-solving",
+        "Creativity",
+        "Mechanical aptitude",
+        "Physics"
+      ],
+      "specializations": [
+        "Aircraft Design",
+        "Space Systems",
+        "Propulsion",
+        "Avionics"
+      ],
+      "average_salary": "₹8-12 LPA",
+      "job_outlook": "Good demand in aerospace industry, defense, and research organizations",
+      "course_duration": "4 years",
+      "core_subjects": [
+        "Aerodynamics",
+        "Flight Mechanics",
+        "Propulsion",
+        "Aircraft Structures",
+        "Space Systems"
+      ]
+    },
+    {
+      "name": "Chemical Engineering",
+      "scope": "Design and operation of chemical processes to produce various products",
+      "career_paths": [
+        "Chemical engineer",
+        "Process engineer",
+        "Materials engineer",
+        "Quality control engineer"
+      ],
+      "skills_required": [
+        "Problem-solving",
+        "Analytical thinking",
+        "Chemistry",
+        "Engineering principles"
+      ],
+      "specializations": [
+        "Petroleum Engineering",
+        "Pharmaceutical Engineering",
+        "Bioprocess Engineering",
+        "Environmental Engineering"
+      ],
+      "average_salary": "₹6-10 LPA",
+      "job_outlook": "Steady demand in chemical industry, pharmaceuticals, and energy sector",
+      "course_duration": "4 years",
+      "core_subjects": [
+        "Chemical Engineering Thermodynamics",
+        "Chemical Reaction Engineering",
+        "Transport Phenomena",
+        "Process Control",
+        "Unit Operations"
+      ]
+    },
+    {
+      "name": "Electronics and Communication Engineering (ECE)",
+      "scope": "Design and development of electronic circuits, communication systems, and devices",
+      "career_paths": [
+        "Electronics engineer",
+        "Communication engineer",
+        "VLSI engineer",
+        "Embedded systems engineer"
+      ],
+      "skills_required": [
+        "Problem-solving",
+        "Analytical thinking",
+        "Circuit analysis",
+        "Mathematics"
+      ],
+      "specializations": [
+        "VLSI Design",
+        "Embedded Systems",
+        "Communication Systems",
+        "Signal Processing"
+      ],
+      "average_salary": "₹6-10 LPA",
+      "job_outlook": "Good demand in electronics, communication, and IT industries",
+      "course_duration": "4 years",
+      "core_subjects": [
+        "Circuit Theory",
+        "Electromagnetism",
+        "Analog and Digital Electronics",
+        "Communication Systems",
+        "Signal Processing"
+      ]
+    },
+    {
+      "name": "Information Technology (IT)",
+      "scope": "Management and maintenance of computer systems, networks, and data",
+      "career_paths": [
+        "IT manager",
+        "Systems analyst",
+        "Network engineer",
+        "Software developer"
+      ],
+      "skills_required": [
+        "Problem-solving",
+        "Technical skills",
+        "Communication skills",
+        "Business understanding"
+      ],
+      "specializations": [
+        "Cybersecurity",
+        "Cloud Computing",
+        "Database Management",
+        "Software Engineering"
+      ],
+      "average_salary": "₹6-10 LPA",
+      "job_outlook": "High demand in IT industry and various other sectors",
+      "course_duration": "4 years",
+      "core_subjects": [
+        "Programming Fundamentals",
+        "Computer Networks",
+        "Operating Systems",
+        "Database Management Systems",
+        "Software Engineering"
+      ]
+    }
+  ]
+}

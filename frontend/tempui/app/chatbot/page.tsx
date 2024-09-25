@@ -24,7 +24,7 @@ import PipecatWebSocketClient from "../voice/PipecatWebSocketClient";
 import Dropdown from "react-dropdown";
 import "react-dropdown/style.css";
 //@ts-ignore
-import { JsonToTable } from "react-json-to-table";
+import CourseComparison from "./CourseComparison"; // Adjust the import path as necessary
 
 function ChatbotPage() {
   const [messages, setMessages] = useState([
@@ -52,7 +52,6 @@ function ChatbotPage() {
   });
   const collegeInfoRef = useRef(collegeInfo);
   const [isConnecting, setIsConnecting] = useState(true);
-  const [responseState, setResponseState] = useState([]);
 
   useEffect(() => {
     collegeInfoRef.current = collegeInfo;
@@ -60,7 +59,7 @@ function ChatbotPage() {
 
   const connectWebSocket = () => {
     const socket = io(
-      "localhost:5000",
+      "http://127.0.0.1:5000",
       { transports: ["websocket"] }
     );
 
@@ -221,9 +220,7 @@ function ChatbotPage() {
     //@ts-ignore
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
-  useEffect(scrollToBottom, [messages]);
-
+  useEffect(scrollToBottom, [messages]);  
   const handleSend = () => {
     if (input.trim()) {
       if (ws && ws.connected) {
@@ -277,22 +274,21 @@ function ChatbotPage() {
       ]);
     }
   };
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
+  const handleOpenComparison = () => {
+    setIsComparisonOpen(true);
+  };
+
+  const handleCloseComparison = () => {
+    setIsComparisonOpen(false);
+  };
   const handleDownloadSummary = async () => {
     try {
-      const response = await fetch(
-        "https://super-engine-694vvjp9qjw73rq6-5000.app.github.dev/generate_summary",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ messages }),
-        }
-      );
+      const response = await fetch("/EduMitra Conversation Summary.pdf");
 
       if (!response.ok) {
-        throw new Error("Failed to generate summary");
+      throw new Error("Failed to fetch the PDF");
       }
 
       const blob = await response.blob();
@@ -461,13 +457,13 @@ function ChatbotPage() {
                         <div>
                           {message.toolCall.type !== "college_list"
                             ? message?.options?.map((option) => (
-                                <Button
-                                  key={option}
-                                  onClick={() => sendMsg(option)}
-                                  className={styles["custom-button"]}
-                                >
-                                  {option}
-                                </Button>
+                            <Button
+                              key={option}
+                              onClick={() => sendMsg(option)}
+                              className={styles["custom-button"]}
+                            >
+                              {option}
+                            </Button>
                               ))
                             : null}
                         </div>
@@ -493,7 +489,7 @@ function ChatbotPage() {
                       }
                       className={`flex-grow p-3 bg-transparent focus:outline-none ${
                         isDarkMode
-                          ? "text-white placeholder-gray-400"
+                          ? "text-black placeholder-gray-400"
                           : "text-gray-900 placeholder-gray-500"
                       }`}
                       disabled={isConnecting}
@@ -667,16 +663,46 @@ function ChatbotPage() {
                 </p>
               </div>
             </div>
-            <Button
-              onClick={handleDownloadSummary}
+            <div className="space-y-4">
+              {" "}
+              {/* Added vertical spacing */}
+              <div className="mt-4">
+                {" "}
+                {/* Margin-top for gap above the first button */}
+                <Button
+                  onClick={handleDownloadSummary}
               className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
-            >
-              Download Summary
-            </Button>
+                >
+                  Download Summary
+                </Button>
+              </div>
+              <div className="flex space-x-2">
+                {" "}
+                {/* Flex container for horizontal spacing */}
+                  <Button
+                  
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 text-[15px] focus:ring-purple-500 focus:ring-opacity-50"
+                  >
+                    Take Course Selection Quiz
+                  </Button>
+                <Button
+                  onClick={handleOpenComparison}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+                >
+                  Course Vs Course
+                </Button>
+              </div>
+              <div className="mb-4"></div>{" "}
+              {/* Margin-bottom for gap below the last button */}
+            </div>
           </div>
         </div>
       </div>
       <ToastContainer />
+      {isComparisonOpen && (
+        <CourseComparison onClose={handleCloseComparison} />
+      )}{" "}
+      {/* Render the CourseComparison popup */}
     </div>
   );
 }

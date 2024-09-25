@@ -16,7 +16,7 @@ import sys
 # MongoDB connection
 client = MongoClient('mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app')
 db = client['college_database']
-conversation_histories = {}
+
 llm = ChatGoogleGenerativeAI(
     model="gemini-1.5-flash",
     temperature=0,
@@ -181,29 +181,8 @@ def ChatModel(id, msg):
     config = {"configurable": {"thread_id": id}}
     inputs = {"messages": [("user", msg)]}
     try:
-        # Clear the conversation history for this thread if it exists
-        if id in conversation_histories:
-            conversation_history = conversation_histories[id]
-        else:
-            conversation_history = []
-            conversation_histories[id] = conversation_history
-        
-        # Add the current user message to the history
-        conversation_history.append(("user", msg))
-        
-        # Run the graph with the current message
         res = print_stream(graph, inputs, config)
-        
-        # Add the bot's response to the history
-        conversation_history.append(("ai", res["msg"]))
-        
-        # Extract information from the full conversation history
-        full_conversation = "\n".join([f"{role}: {content}" for role, content in conversation_history])
-        extraction = extract_college_info(full_conversation)
-        
-        # Update the conversation history with the extracted information
-        conversation_history.append(("info", extraction))
-        
+        extraction = extract_college_info(res["msg"])
         return {"res": res, "info": extraction}
     except Exception as e:
         print("Error in ChatModel:", str(e))
