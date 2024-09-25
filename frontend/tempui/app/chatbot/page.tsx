@@ -656,7 +656,7 @@ function ChatbotPage() {
                   collegeInfo.scholarships != "0" ? (
                     <Typewriter
                       options={{
-                        strings: collegeInfo.fees.toString(),
+                        strings: collegeInfo.scholarships.toString(),
                         autoStart: true,
                         loop: false,
                       }}
