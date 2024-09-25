@@ -4,15 +4,21 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, useAnimation } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
-import { GraduationCap, Book, Users, MessageCircle, Menu, X, Clock, Database, Mic } from 'lucide-react'
+import { GraduationCap, Book, Users, MessageCircle, Menu, X, Clock, Database, Mic, Sun, Moon } from 'lucide-react'
+import { Button } from "@nextui-org/button"
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const controls = useAnimation()
   const [ref, inView] = useInView()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
+  }
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode)
   }
 
   useEffect(() => {
@@ -46,10 +52,10 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-purple-600 to-indigo-800 text-white min-h-screen flex flex-col w-full">
-      <nav className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg p-4 fixed top-0 left-0 right-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold flex items-center">
+    <div className={`min-h-screen flex flex-col w-full ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+      <nav className="bg-gradient-to-r  from-purple-600 to-indigo-800 bg-opacity-10 opacity-95 backdrop-filter backdrop-blur-3xl p-4 fixed top-0 left-0 right-0 z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <Link href="/" className="text-2xl font-bold flex items-center text-white">
             <motion.div
               animate={pulseAnimation}
               className="flex items-center"
@@ -58,23 +64,16 @@ export default function LandingPage() {
               EduMitra
             </motion.div>
           </Link>
-          <div className="md:hidden" onClick={toggleMenu}>
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </div>
-          <ul className={`md:flex md:space-x-8 ${isMenuOpen ? 'block absolute top-full left-0 right-0 bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg p-4 md:p-0 md:relative md:bg-transparent' : 'hidden'}`}>
-            {['Home', 'Courses', 'About', 'Contact'].map((item) => (
-              <motion.li
-                key={item}
-                className="md:inline-block my-2 md:my-0"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link href={`/${item.toLowerCase()}`} className="hover:text-purple-300 transition-colors duration-200">
-                  {item}
-                </Link>
-              </motion.li>
-            ))}
-          </ul>
+          
+          
+                
+          <Button
+            onClick={toggleTheme}
+            className="ml-4 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors duration-200 text-white"
+            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {isDarkMode ? <Sun size={25} /> : <Moon size={25} />}
+          </Button>
         </div>
       </nav>
       <main className="flex-grow flex flex-col items-center justify-center text-center px-4 pt-24 pb-12">
@@ -105,7 +104,7 @@ export default function LandingPage() {
             transition={{ duration: 0.5, delay: 0.4 }}
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link href="/chatbot" className="bg-white text-purple-600 hover:bg-purple-100 font-bold py-3 px-8 rounded-full transition-colors duration-200 flex items-center justify-center">
+              <Link href="/chatbot" className="bg-purple-600 text-white hover:bg-purple-700 font-bold py-3 px-8 rounded-full transition-colors duration-200 flex items-center justify-center">
                 <MessageCircle className="mr-2" />
                 Chat with EduMitra now!
               </Link>
@@ -139,13 +138,13 @@ export default function LandingPage() {
             ].map((feature, index) => (
               <motion.div 
                 key={feature.title}
-                className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg p-6 rounded-lg text-center flex flex-col items-center"
+                className={`p-6 rounded-lg text-center flex flex-col items-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}
                 variants={fadeIn}
                 whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
               >
                 <motion.div
                   animate={pulseAnimation}
-                  className="text-purple-300"
+                  className="text-purple-600"
                 >
                   {feature.icon}
                 </motion.div>
@@ -156,37 +155,7 @@ export default function LandingPage() {
           </motion.div>
         </div>
       </section>
-      <section className="w-full px-4 py-16 bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.h2 
-            className="text-3xl md:text-4xl font-bold mb-8"
-            initial="hidden"
-            animate={controls}
-            variants={fadeIn}
-          >
-            Explore the Future of Education with EduMitra
-          </motion.h2>
-          <motion.p
-            className="text-lg mb-8"
-            initial="hidden"
-            animate={controls}
-            variants={fadeIn}
-          >
-            Your journey to Rajasthan's top engineering and polytechnic institutes starts here! Experience hassle-free admissions and let EduMitra be your guide.
-          </motion.p>
-          <motion.div
-            initial="hidden"
-            animate={controls}
-            variants={fadeIn}
-          >
-            <Link href="/chatbot" className="bg-white text-purple-600 hover:bg-purple-100 font-bold py-3 px-8 rounded-full transition-colors duration-200 inline-flex items-center">
-              <MessageCircle className="mr-2" />
-              Get Started with EduMitra
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-      <footer className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg py-8 w-full">
+      <footer className={`py-8 w-full ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p>&copy; 2024 EduMitra. All rights reserved.</p>
           <p className="mt-2">Empowering Education, Simplifying Admissions!</p>
