@@ -319,14 +319,14 @@ function ChatbotPage() {
 
   const RankTable = ({ data }: { data: any }) => {
     return (
-      <table border={1}>
+      <table border={1} >
         <thead>
           <tr>
-            <th>Department</th>
-            <th>Year</th>
-            <th>Category</th>
-            <th>Opening Rank</th>
-            <th>Closing Rank</th>
+            <th className={`${isDarkMode?'bg-inherit':'text-black'}`}>Department</th>
+            <th className={`${isDarkMode?'bg-inherit':'text-black'}`}>Year</th>
+            <th className={`${isDarkMode?'bg-inherit':'text-black'}`}>Category</th>
+            <th className={`${isDarkMode?'bg-inherit':'text-black'}`}>Opening Rank</th>
+            <th className={`${isDarkMode?'bg-inherit':'text-black'}`}>Closing Rank</th>
           </tr>
         </thead>
         <tbody>

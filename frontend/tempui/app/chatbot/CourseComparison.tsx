@@ -101,12 +101,12 @@ const CourseComparison: React.FC<CourseComparisonProps> = ({ onClose }) => {
 
 
       {isModalOpen && comparisonData && (
-        <Modal onClose={() => setModalOpen(false)}>
+        <Modal onClose={() => setModalOpen(false)} >
           <h3 className="text-xl font-bold mb-2 text-gray-800">
             Comparison Results:
           </h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-300 rounded-lg bg-white shadow-md">
+          <div className="overflow-x-auto overflow-y-scroll h-[600px]">
+            <table className="min-w-full border border-gray-300 rounded-lg bg-white shadow-md overflow-x-auto">
               <thead className="bg-gray-200 text-gray-800">
                 <tr>
                   <th className="border px-4 py-2">Parameter</th>
