@@ -3,7 +3,6 @@ import styles from "./page.module.css";
 import { useState, useEffect, useRef } from "react";
 import {
   Send,
-  Calendar,
   GraduationCap,
   CircleDollarSign,
   Scissors,
@@ -24,9 +23,14 @@ import PipecatWebSocketClient from "../voice/PipecatWebSocketClient";
 import Dropdown from "react-dropdown";
 import "react-dropdown/style.css";
 //@ts-ignore
-import CourseComparison from "./CourseComparison"; // Adjust the import path as necessary
-
+import "react-toastify/dist/ReactToastify.css";
+import "react-dropdown/style.css";
+//@ts-ignore
+import { JsonToTable } from "react-json-to-table";
+import CourseComparison from "./CourseComparison";
+import CourseSelectionQuiz from "./CourseSelectionQuiz";
 function ChatbotPage() {
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       sender: "bot",
@@ -58,10 +62,7 @@ function ChatbotPage() {
   }, [collegeInfo]);
 
   const connectWebSocket = () => {
-    const socket = io(
-      "http://127.0.0.1:5000",
-      { transports: ["websocket"] }
-    );
+    const socket = io("http://127.0.0.1:5000", { transports: ["websocket"] });
 
     socket.on("connect", () => {
       console.log("Connected to server");
@@ -220,7 +221,7 @@ function ChatbotPage() {
     //@ts-ignore
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-  useEffect(scrollToBottom, [messages]);  
+  useEffect(scrollToBottom, [messages]);
   const handleSend = () => {
     if (input.trim()) {
       if (ws && ws.connected) {
@@ -283,12 +284,14 @@ function ChatbotPage() {
   const handleCloseComparison = () => {
     setIsComparisonOpen(false);
   };
+  const handleOpenQuiz = () => setIsQuizOpen(true);
+  const handleCloseQuiz = () => setIsQuizOpen(false);
   const handleDownloadSummary = async () => {
     try {
       const response = await fetch("/EduMitra Conversation Summary.pdf");
 
       if (!response.ok) {
-      throw new Error("Failed to fetch the PDF");
+        throw new Error("Failed to generate summary");
       }
 
       const blob = await response.blob();
@@ -611,7 +614,7 @@ function ChatbotPage() {
                       {Object.entries(collegeInfo.cutoff).map(
                         ([department, years]) => (
                           <div key={department}>
-                            {Object.entries(years).map(([year, categories]) => (
+                            {Object.entries(years as Record<string, any>).map(([year, categories]) => (
                               <div key={year}>
                                 {categories.General && (
                                   <div>
@@ -679,12 +682,12 @@ function ChatbotPage() {
               <div className="flex space-x-2">
                 {" "}
                 {/* Flex container for horizontal spacing */}
-                  <Button
-                  
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 text-[15px] focus:ring-purple-500 focus:ring-opacity-50"
-                  >
-                    Take Course Selection Quiz
-                  </Button>
+                
+                <Button 
+                onClick={handleOpenQuiz}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+                  Take Course Selection Quiz
+                </Button>
                 <Button
                   onClick={handleOpenComparison}
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
@@ -702,8 +705,14 @@ function ChatbotPage() {
       {isComparisonOpen && (
         <CourseComparison onClose={handleCloseComparison} />
       )}{" "}
+      {isQuizOpen && <CourseSelectionQuiz onClose={handleCloseQuiz} />}
+
       {/* Render the CourseComparison popup */}
     </div>
   );
 }
 export default ChatbotPage;
+
+function setIsQuizOpen(arg0: boolean) {
+  throw new Error("Function not implemented.");
+}

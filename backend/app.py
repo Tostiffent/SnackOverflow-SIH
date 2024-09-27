@@ -1,80 +1,44 @@
 from flask import Flask, jsonify, request, send_file
 from flask_pymongo import PyMongo
+from pymongo.errors import ConnectionFailure
 from bson import ObjectId
 from flask_cors import CORS
-from motor.motor_asyncio import AsyncIOMotorClient
-from flask_socketio import SocketIO
-from flask_socketio import emit
+from flask_socketio import SocketIO, emit
 from chat_model import *
 import json
+import random
 
 app = Flask(__name__)
-#socketio and cors headers
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
-#threading auto handles all async tasks as a seperate thread
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-
-app.config["MONGO_URI"] = "mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app"
+# MongoDB configuration
+app.config["MONGO_URI"] = "mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/college_database?retryWrites=true&w=majority&appName=Assistance-app"
 mongo = PyMongo(app)
 
-client = AsyncIOMotorClient("mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app")
-db = client.college_database  
+# Ensure database connection
+try:
+    # The ping command is cheap and does not require auth.
+    mongo.db.command('ping')
+    print("Connected to MongoDB!")
+except ConnectionFailure:
+    print("Failed to connect to MongoDB")
+    # You might want to exit the application here if MongoDB is critical
+    # import sys
+    # sys.exit(1)
+
 # Helper function to convert ObjectId to string
 def convert_objectid(document):
     document["_id"] = str(document["_id"])
     return document
 
-@app.route('/events', methods=['GET'])
-async def get_events():
-    try:
-        events = await db.events.find().to_list(length=None)
-        events_list = [convert_objectid(event) for event in events]
-        return jsonify(events_list), 200
-    except Exception as e:
-        print(f"Error accessing events: {e}")
-        return {"error": str(e)}, 500
-
-@app.route('/add_event', methods=['POST'])
-async def add_event():
-    try:
-        data = request.json
-        result = await db.events.insert_one(data)
-        return jsonify({"message": "Event added successfully", "event_id": str(result.inserted_id)}), 201
-    except Exception as e:
-        print(f"Error adding event: {e}")
-        return {"error": str(e)}, 500
-
-@app.route('/update_event/<event_id>', methods=['PUT'])
-async def update_event(event_id):
-    try:
-        data = request.json
-        result = await db.events.update_one({'_id': ObjectId(event_id)}, {"$set": data})
-        if result.matched_count == 0:
-            return jsonify({"message": "Event not found"}), 404
-        return jsonify({"message": "Event updated successfully"}), 200
-    except Exception as e:
-        print(f"Error updating event: {e}")
-        return {"error": str(e)}, 500
-
-@app.route('/delete_event/<event_id>', methods=['DELETE'])
-async def delete_event(event_id):
-    try:
-        result = await db.events.delete_one({'_id': ObjectId(event_id)})
-        if result.deleted_count == 0:
-            return jsonify({"message": "Event not found"}), 404
-        return jsonify({"message": "Event deleted successfully"}), 200
-    except Exception as e:
-        print(f"Error deleting event: {e}")
-        return {"error": str(e)}, 500
-    
 @app.route('/voice/response', methods=['POST'])
-async def handle_voice_response():
+def handle_voice_response():
     data = request.json
     print(data)
-    socketio.emit("voice_response", data)
+    emit("voice_response", data)
     return "sent to front"
-    
+
 @app.route('/generate_summary', methods=['POST'])
 def generate_summary_route():
     messages = request.json['messages']
@@ -87,16 +51,83 @@ def generate_summary_route():
         download_name='chat_summary.pdf',
         mimetype='application/pdf'
     )
-#event named send_message is trigger, current input format as a dict {"msg": string, "id", string}
+
 @socketio.on('send_message')
 def handle_send_message(msg):
     print("Generating response for: ", msg)
-    #manually converting string to json
     res = ChatModel(msg["id"], msg["msg"])
-    #response is the event name triggered on frontend
     print("sending", res)
     socketio.emit("response", res)
 
+@app.route('/quiz/questions', methods=['GET'])
+def get_quiz_questions():
+    try:
+        # Ensure the collection exists
+        if 'quiz_questions' not in mongo.db.list_collection_names():
+            return jsonify({"error": "Quiz questions collection does not exist"}), 404
+
+        questions = list(mongo.db.quiz_questions.find())
+        if not questions:
+            return jsonify({"error": "No quiz questions found"}), 404
+
+        questions_list = [convert_objectid(question) for question in questions]
+        random.shuffle(questions_list)
+        return jsonify(questions_list[:5]), 200
+    except Exception as e:
+        print(f"Error accessing quiz questions: {e}")
+        return {"error": str(e)}, 500
+
+def analyze_quiz_answers(answers):
+    course_scores = {
+        "Computer Science and Engineering (CSE)": 0,
+        "Mechanical Engineering": 0,
+        "Electrical Engineering": 0,
+        "Civil Engineering": 0,
+        "Artificial Intelligence (AI)": 0,
+        "Data Science": 0,
+        "Biomedical Engineering": 0,
+        "Aerospace Engineering": 0,
+        "Chemical Engineering": 0,
+        "Electronics and Communication Engineering": 0,
+        "Information Technology (IT)": 0
+    }
+    
+    for question_id in answers.keys():
+        question = mongo.db.quiz_questions.find_one({"_id": ObjectId(question_id)})
+        if question:
+            weights = question.get("courseWeights", {})
+            for course, weight in weights.items():
+                if course in course_scores:
+                    course_scores[course] += weight
+    
+    sorted_courses = sorted(course_scores.items(), key=lambda x: x[1], reverse=True)[:3]
+    
+    recommendations = [
+        {
+            "course": course,
+            "score": score,
+            "reason": f"Based on your answers, you show a strong aptitude for {course}."
+        }
+        for course, score in sorted_courses if score > 0
+    ]
+    
+    return recommendations
+
+@app.route('/quiz/submit', methods=['POST'])
+def submit_quiz():
+    try:
+        data = request.json
+        answers = data['answers']
+        
+        recommendations = analyze_quiz_answers(answers)
+        
+        mongo.db.quiz_responses.insert_one({"answers": answers, "recommendations": recommendations})
+        
+        return jsonify(recommendations), 200
+        
+    except Exception as e:
+        print(f"Error processing quiz submission: {e}")
+        return {"error": str(e)}, 500
+
 if __name__ == '__main__':
-    #socketio takes over the handling of the flask application
     socketio.run(app, debug=True, host='127.0.0.1', port=5000)
