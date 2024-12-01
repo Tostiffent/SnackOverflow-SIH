@@ -23,7 +23,7 @@ llm = ChatGoogleGenerativeAI(
     max_tokens=None,
     timeout=None,
     max_retries=2,
-    google_api_key="AIzaSyDIG-JhAjoTJPZV_M5CGzjhIX8klNbXm3I"
+    google_api_key="AIzaSyDPMDPp221VN3OznFnYj74ga0gDCPVxbEA"
 
 )
 
@@ -33,7 +33,7 @@ extractionLLM = ChatGoogleGenerativeAI(
     max_tokens=None,
     timeout=None,
     max_retries=2,
-    google_api_key="AIzaSyDIG-JhAjoTJPZV_M5CGzjhIX8klNbXm3I"
+    google_api_key="AIzaSyAQoV8oqXQ6GYm72lJWDogZnra5KwufnS8"
 )
 
 memory = MemorySaver()

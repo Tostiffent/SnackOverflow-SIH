@@ -5,8 +5,10 @@ asyncio
 motor
 requests
 pymongo
+langchain-community
 langchain_core
 langchain_google_genai
 langgraph
 argparse
 flask-socketio
+reportlab

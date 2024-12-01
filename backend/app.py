@@ -32,6 +32,10 @@ def convert_objectid(document):
     document["_id"] = str(document["_id"])
     return document
 
+@app.route("/",methods=['GET'])
+def home_route():
+    return "chat backend"
+
 @app.route('/voice/response', methods=['POST'])
 def handle_voice_response():
     data = request.json
@@ -130,4 +134,4 @@ def submit_quiz():
         return {"error": str(e)}, 500
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='127.0.0.1', port=5000)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000,allow_unsafe_werkzeug=True)
