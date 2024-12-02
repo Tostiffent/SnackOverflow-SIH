@@ -286,30 +286,61 @@ function ChatbotPage() {
   };
   const handleOpenQuiz = () => setIsQuizOpen(true);
   const handleCloseQuiz = () => setIsQuizOpen(false);
-  const handleDownloadSummary = async () => {
+  const downloadSummary = async () => {
     try {
-      const response = await fetch("/EduMitra Conversation Summary.pdf");
-
+      // Format messages for summary generation
+      const formattedMessages = messages.map(message => ({
+        user: message.sender === 'user' ? message.content : '',
+        bot: message.sender === 'bot' ? message.content : ''
+      })).filter(msg => msg.user || msg.bot);
+  
+      const response = await fetch("http://localhost:5000/generate-summary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          conversation: formattedMessages
+        }),
+      });
+  
       if (!response.ok) {
-        throw new Error("Failed to generate summary");
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      const blob = await response.blob();
+  
+      const data = await response.json();
+  
+      // Download the summary as PDF
+      const downloadResponse = await fetch("http://localhost:5000/download-summary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          summary: data.summary
+        }),
+      });
+  
+      if (!downloadResponse.ok) {
+        throw new Error(`HTTP error! status: ${downloadResponse.status}`);
+      }
+  
+      const blob = await downloadResponse.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.style.display = "none";
+      const a = document.createElement('a');
       a.href = url;
-      a.download = "chat_summary.pdf";
+      a.download = "edumitra_conversation_summary.pdf";
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
+      a.remove();
+  
       toast.success("Summary downloaded successfully!");
     } catch (error) {
       console.error("Error downloading summary:", error);
-      toast.error("Failed to download summary. Please try again.");
+      toast.error("Failed to download summary.");
     }
   };
-
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
@@ -673,7 +704,7 @@ function ChatbotPage() {
                 {" "}
                 {/* Margin-top for gap above the first button */}
                 <Button
-                  onClick={handleDownloadSummary}
+                  onClick={downloadSummary}
               className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-md font-bold hover:from-purple-700 hover:to-pink-700 transition duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
                 >
                   Download Summary
@@ -716,3 +747,15 @@ export default ChatbotPage;
 function setIsQuizOpen(arg0: boolean) {
   throw new Error("Function not implemented.");
 }
+function setIsLoading(arg0: boolean) {
+  throw new Error("Function not implemented.");
+}
+
+function setSummary(summary: any) {
+  throw new Error("Function not implemented.");
+}
+
+function saveAs(blob: Blob, arg1: string) {
+  throw new Error("Function not implemented.");
+}
+

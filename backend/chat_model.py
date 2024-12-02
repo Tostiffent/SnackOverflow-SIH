@@ -1,19 +1,11 @@
-import sys
-from time import sleep
+import json
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.tools import tool
 from pymongo import MongoClient
-from langchain_community.document_loaders.csv_loader import CSVLoader
-import asyncio
-import json
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from io import BytesIO
-from time import sleep 
-import sys
-# MongoDB connection
+
+
 client = MongoClient('mongodb+srv://rayyaan:rayyaan123@assistance-app.cg5ou.mongodb.net/?retryWrites=true&w=majority&appName=Assistance-app')
 db = client['college_database']
 
@@ -26,6 +18,8 @@ llm = ChatGoogleGenerativeAI(
     google_api_key="AIzaSyDPMDPp221VN3OznFnYj74ga0gDCPVxbEA"
 
 )
+
+
 
 extractionLLM = ChatGoogleGenerativeAI(
     model="gemini-1.5-flash",
@@ -136,23 +130,6 @@ def extract_college_info(content):
     
     
     return extracted_info
-def generate_pdf_summary(conversation_summary):
-    buffer = BytesIO()
-    c = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-    
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, height - 50, "College Inquiry Summary")
-    
-    c.setFont("Helvetica", 12)
-    y = height - 80
-    for key, value in conversation_summary.items():
-        c.drawString(50, y, f"{key.replace('_', ' ').title()}: {value}")
-        y -= 20
-    
-    c.save()
-    buffer.seek(0)
-    return buffer
 
 
 def print_stream(graph, inputs, config):
@@ -173,10 +150,8 @@ def print_stream(graph, inputs, config):
          else:
              message.pretty_print()
      return {"msg": msg, "toolCall":toolCall}
-def generate_summary(conversation_history):
-    summary = extract_college_info("\n".join(conversation_history))
-    pdf_buffer = generate_pdf_summary(summary)
-    return pdf_buffer
+
+
 def ChatModel(id, msg):
     config = {"configurable": {"thread_id": id}}
     inputs = {"messages": [("user", msg)]}
