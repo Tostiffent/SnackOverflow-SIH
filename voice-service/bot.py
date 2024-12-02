@@ -11,13 +11,10 @@ from pipecat.processors.aggregators.llm_response import (
     LLMAssistantResponseAggregator,
     LLMUserResponseAggregator
 )
-from pipecat.services.cartesia import CartesiaTTSService
 from pipecat.services.deepgram import DeepgramSTTService
-from pipecat.services.openai import OpenAILLMService
 from pipecat.transports.network.websocket_server import WebsocketServerParams, WebsocketServerTransport
 from pipecat.vad.silero import SileroVADAnalyzer
 from pipecat.services.elevenlabs import ElevenLabsTTSService
-from pipecat.services.google import GoogleLLMService
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
@@ -38,6 +35,7 @@ logger.add(sys.stderr, level="DEBUG")
 async def main():
     async with aiohttp.ClientSession() as session:
         transport = WebsocketServerTransport(
+            host='0.0.0.0',
             params=WebsocketServerParams(
                 audio_out_enabled=True,
                 add_wav_header=True,

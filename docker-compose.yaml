@@ -1,0 +1,27 @@
+services:
+  chat-backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+  chat-voice:
+    build: ./voice-service
+    ports:
+      - "8765:8765"
+    environment:
+      - DAILY_SAMPLE_ROOM_URL=https://testbotsih.daily.co/testing
+      - DAILY_API_KEY=89a36701570b6dd67a1b93a60d489beeaed6f4b7952da44c0b48c0281602d152
+      - GOOGLE_API_KEY=AIzaSyAQoV8oqXQ6GYm72lJWDogZnra5KwufnS8
+      - DEEPGRAM_API_KEY=c941f6f797aead6ccb7db97119d31d851484962b
+      - ELEVENLABS_API_KEY=sk_98717b06dc14a34b25a0a7c01e1c1867040633541a95f368
+    depends_on:
+      - chat-backend
+  chat-frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=https://orange-space-palm-tree-7j5v5x647xwf754-5000.app.github.dev
+      - VOICE_URL=https://orange-space-palm-tree-7j5v5x647xwf754-8765.app.github.dev
+    depends_on:
+      - chat-backend
+      - chat-voice
